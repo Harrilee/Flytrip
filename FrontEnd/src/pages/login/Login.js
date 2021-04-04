@@ -36,7 +36,7 @@ const register = (values)=>{
     if (values.phone_prefix!=undefined) values.phone = values.phone_prefix+' '+values.phone_number
     values.action='register'
     console.log(JSON.stringify(values));
-    //todo 拿到注册请求返回结果，如果正确，刷新页面；否则提示错误
+    //拿到注册请求返回结果，如果正确，刷新页面；否则提示错误
 
     fetch('http://localhost:5000', {
             mode: 'cors',
@@ -445,12 +445,25 @@ function LoginMenu(){
     }
     const onFinish = (values) => {//登录请求
         values.user_type=menuSelection.toLowerCase();
-        values.action='register'
+        values.action='login'
         console.log('Received values of form: ', JSON.stringify(values));
         //todo 修改上一条代码发送POST请求，获取登录状态等
-        if(true){//密码验证成功
 
-        }
+        fetch('http://localhost:5000', {
+            mode: 'cors',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(values)
+        }).then(res => {
+            console.log('res',res)
+            return res.json()
+        }).then(result => {
+            if(result.status=='success'){console.log("logged in as"+values.user_type)}
+            if(result.status=='failed'){alert("Login failed.\n" + result.msg)}
+        });
+
     };
     function Email(props){
             return(props.role==='Customer' || props.role==='Agent')?
@@ -502,7 +515,7 @@ function LoginMenu(){
     )
 }
 
-const Login = () => (
+const Login = (props) => (
     <div className="App" >
         <div style={{
             width:'100%',
@@ -537,6 +550,12 @@ const Login = () => (
                     <LoginMenu />
                     </div>
                 </div>
+                <div className={'asGuest'}><a onClick={(e)=>{
+                    e.preventDefault();
+                    props.setUserType('guest')
+                }}>
+                    Continue as Guest >>
+                </a></div>
             </Content>
             <Footer style={{
                 position: 'absolute',
