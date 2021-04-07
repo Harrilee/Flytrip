@@ -3,20 +3,20 @@ import click
 from flask import current_app, g
 from flask.cli import with_appcontext
 
-
-with connection:
-    with connection.cursor() as cursor:
-        # Create a new record
-        sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
-        cursor.execute(sql, ('webmaster@python.org', 'very-secret'))
-
-    connection.commit()
-
-    with connection.cursor() as cursor:
-        sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
-        cursor.execute(sql, ('webmaster@python.org',))
-        result = cursor.fetchone()
-        print(result)
+#
+# with connection:
+#     with connection.cursor() as cursor:
+#         # Create a new record
+#         sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
+#         cursor.execute(sql, ('webmaster@python.org', 'very-secret'))
+#
+#     connection.commit()
+#
+#     with connection.cursor() as cursor:
+#         sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
+#         cursor.execute(sql, ('webmaster@python.org',))
+#         result = cursor.fetchone()
+#         print(result)
 
 
 def get_db():
@@ -25,7 +25,7 @@ def get_db():
             host='localhost',
             user='root',
             password='password',
-            database='Air_Ticket',
+            database='flytrip',
             cursorclass=pymysql.cursors.DictCursor
         )
 
@@ -41,12 +41,12 @@ def close_db(e=None):
 
 def init_db():
     db = get_db()
+    with db.cursor() as cursor:
+        with current_app.open_resource('schema.sql') as f:
+            cursor.execute(f.read().decode('utf8'))
 
-    with current_app.open_resource('schema.sql') as f:
-        db.cursor().execute(f.read().decode('utf8'))
 
-
-@click.command('init_db')
+@click.command('init-db')
 @with_appcontext
 def init_db_command():
     """Clear the existing data and create new tables"""

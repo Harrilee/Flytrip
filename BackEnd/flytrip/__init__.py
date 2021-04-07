@@ -18,7 +18,7 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    from . import db, auth
+    from BackEnd.flytrip import db
     db.init_app(app)
 
     app.add_url_rule('/', endpoint='index')
