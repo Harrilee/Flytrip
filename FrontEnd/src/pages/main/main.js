@@ -34,6 +34,27 @@ function TableTitle() {
     )
 }
 
+function FlightStatus(){
+    return(
+        <div className={'ticket_title'}>
+            <Row gutter={16}>
+                <Col span={12}>
+
+                </Col>
+                <Col span={4}>
+
+                </Col>
+                <Col span={4}>
+
+                </Col>
+                <Col span={4}>
+                    Flight Status
+                </Col>
+            </Row>
+        </div>
+    )
+}
+
 function Tickets() {
     const [dataSource, setDataSource] = React.useState([]);
     return (
@@ -93,7 +114,7 @@ function Tickets() {
                     }
                     else if (dataSource === []){
                         return <Empty style={{margin: '100px 0'}}/>
-                }
+                    }
                     else{
                         return <TableTitle/>
                     }
@@ -211,23 +232,29 @@ function UpcomingFlights() {
                         </Row>
                     </Form>
                 </div>
+                {()=> {
+                    if (dataSource === '') {
+                        return <React.Fragment/>
+                    }
+                    else if (dataSource === []){
+                        return <Empty style={{margin: '100px 0'}}/>
+                    }
+                    else{
+                        return <TableTitle/>
+                    }
+                }}
                 <div style={{padding: '20px'}}>
-                    <div className={'ticket_title'}>
-                        <Row gutter={16}>
-                            <Col span={12}>
-
-                            </Col>
-                            <Col span={4}>
-
-                            </Col>
-                            <Col span={4}>
-
-                            </Col>
-                            <Col span={4}>
-                                Flight Status
-                            </Col>
-                        </Row>
-                    </div>
+                    {()=> {
+                        if (dataSource === '') {
+                            return <React.Fragment/>
+                        }
+                        else if (dataSource === []){
+                            return <Empty style={{margin: '100px 0'}}/>
+                        }
+                        else{
+                            return <TableTitle/>
+                        }
+                    }}
                     {
                         dataSource.map((d) => {
                             return (
