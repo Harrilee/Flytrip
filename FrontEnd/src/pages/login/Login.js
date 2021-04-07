@@ -438,7 +438,7 @@ class DrawerForm extends React.Component {
     }
 }
 
-function LoginMenu(){
+function LoginMenu(props){
     const [menuSelection, setMenuSelection] = React.useState('Customer');
     const handleClick = (e)=>{
         setMenuSelection(e.key);
@@ -449,7 +449,7 @@ function LoginMenu(){
         console.log('Received values of form: ', JSON.stringify(values));
         //todo 修改上一条代码发送POST请求，获取登录状态等
 
-        fetch('http://localhost:5000', {
+        fetch('http://localhost:5000/auth/login', {
             mode: 'cors',
             method: 'POST',
             headers: {
@@ -460,7 +460,11 @@ function LoginMenu(){
             console.log('res',res)
             return res.json()
         }).then(result => {
-            if(result.status=='success'){console.log("logged in as"+values.user_type)}
+            if(result.status=='success'){
+                console.log("logged in as "+values.user_type);
+                props.setUserType(result.user_type);
+                props.setUsername(result.username);
+            }
             if(result.status=='failed'){alert("Login failed.\n" + result.msg)}
         });
 
@@ -547,7 +551,7 @@ const Login = (props) => (
                         padding:'10px',
                         transition:'1s'
                     }}>
-                    <LoginMenu />
+                    <LoginMenu setUserType={props.setUserType} setUsername={props.setUsername} />
                     </div>
                 </div>
                 <div className={'asGuest'}><a onClick={(e)=>{

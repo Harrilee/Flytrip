@@ -17,7 +17,6 @@ function TableTitle() {
             <div className={'ticket_title'}>
                 <Row gutter={16}>
                     <Col span={12}>
-
                     </Col>
                     <Col span={4}>
                         Economy Class
@@ -108,17 +107,8 @@ function Tickets() {
                         </Row>
                     </Form>
                 </div>
-                {()=> {
-                    if (dataSource === '') {
-                        return <React.Fragment/>
-                    }
-                    else if (dataSource === []){
-                        return <Empty style={{margin: '100px 0'}}/>
-                    }
-                    else{
-                        return <TableTitle/>
-                    }
-                }}
+                {dataSource==''?<React.Fragment />:
+                    dataSource==[]?<Empty style={{margin: '100px 0'}}/>:<TableTitle/>}
                 {
                     dataSource.map((d) => {
                         return (
@@ -211,15 +201,15 @@ function UpcomingFlights() {
                         <Row gutter={32} justify={'end'}>
                             <Col span={10}>
                                 <Form.Item
-                                    name={'from'}
-                                    label={"From"}>
+                                    name={'flight_num'}
+                                    label={"Flight Number"}>
                                     <Input/> {/*todo 后面这些input全部改成mentions，随时返回提示*/}
                                 </Form.Item>
                             </Col>
                             <Col span={10}>
                                 <Form.Item
-                                    name={'to'}
-                                    label={"To"}>
+                                    name={'airline'}
+                                    label={"Airline"}>
                                     <Input/>
                                 </Form.Item>
                             </Col>
@@ -232,29 +222,9 @@ function UpcomingFlights() {
                         </Row>
                     </Form>
                 </div>
-                {()=> {
-                    if (dataSource === '') {
-                        return <React.Fragment/>
-                    }
-                    else if (dataSource === []){
-                        return <Empty style={{margin: '100px 0'}}/>
-                    }
-                    else{
-                        return <TableTitle/>
-                    }
-                }}
                 <div style={{padding: '20px'}}>
-                    {()=> {
-                        if (dataSource === '') {
-                            return <React.Fragment/>
-                        }
-                        else if (dataSource === []){
-                            return <Empty style={{margin: '100px 0'}}/>
-                        }
-                        else{
-                            return <TableTitle/>
-                        }
-                    }}
+                    {dataSource==''?<React.Fragment />:
+                        dataSource==[]?<Empty style={{margin: '100px 0'}}/>:<FlightStatus/>}
                     {
                         dataSource.map((d) => {
                             return (
