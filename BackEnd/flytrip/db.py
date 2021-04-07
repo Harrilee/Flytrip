@@ -23,6 +23,7 @@ def get_db():
     if 'db' not in g:
         g.db = pymysql.connect(
             host='localhost',
+            port=3306,
             user='root',
             password='password',
             database='flytrip',
