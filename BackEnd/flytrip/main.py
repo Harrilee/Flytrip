@@ -32,8 +32,10 @@ def GETApi():
     print(request.args)
     if request.args.get('action') == 'getTickets':  # 用户（非登录）查看所有票
         return jsonify({'status': 'success',
-                        'dataSource': testData.dataSource})
-
+                        'dataSource': testData.ticketDataSource})
+    elif request.args.get('action') == 'getStatus':
+        return jsonify({'status': 'success',
+                        'dataSource': testData.statusDataSource})
 
 # todo: session & token
 
