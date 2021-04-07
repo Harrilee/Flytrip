@@ -1,9 +1,12 @@
 import os
-from flask import Flask
+from flask import Flask, request, jsonify, session
+from flask_cors import CORS
+from . import testData
 
 
 def create_app(test_config=None):
     app = Flask(__name__, instance_relative_config=True)
+    CORS(app, resources=r'/*', supports_credentials=True)
     app.config.from_mapping(
         SECRET_KEY='dev',
     )
@@ -18,13 +21,22 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    from BackEnd.flytrip import db
+    from . import db
     db.init_app(app)
-
-    app.add_url_rule('/', endpoint='index')
 
     @app.route('/test')
     def test():
         return 'hello world!'
+
+
+
+    @app.route('/', methods=['GET'])
+    def GETApi():
+        print(request.args.get('action'))
+        if request.args.get('action') == 'getTickets':  # 用户（非登录）查看所有票
+            return jsonify({'status': 'success',
+                            'dataSource': testData.dataSource})
+
+    # todo: session & token
 
     return app
