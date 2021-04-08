@@ -38,13 +38,13 @@ const register = (values)=>{
     console.log(JSON.stringify(values));
     //拿到注册请求返回结果，如果正确，刷新页面；否则提示错误
 
-    fetch('http://localhost:5000', {
+    fetch('http://localhost:5000/auth/register', {
             mode: 'cors',
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',//add cookie
+                'Content-Type': 'application/json',
             },
-            credentials: 'include',
+            credentials: 'include',//add cookie
             body: JSON.stringify(values)
     }).then(res => {
         console.log('res',res)

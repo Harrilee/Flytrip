@@ -22,7 +22,24 @@ function Buy(props){
         <a onClick={(e)=>{
             e.preventDefault();
             setShowModal(true);
-            //todo: send purchase request
+            fetch('http://localhost:5000/auth/login', {
+                mode: 'cors',
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                credentials: 'include',
+                body: JSON.stringify({})
+            }).then(res => {
+                console.log('res',res)
+                return res.json()
+            }).then(result => {
+                if(result.status=='success'){
+                    props.setUserType(result.user_type);
+                    props.setUsername(result.username);
+                }
+                if(result.status=='failed'){alert("Login failed.\n" + result.msg)}
+            });
         }}>
             <ShoppingCartOutlined style={{margin: '0 10px'}} />
         </a>
