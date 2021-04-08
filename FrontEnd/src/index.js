@@ -13,20 +13,20 @@ function Root(){
     const [username, setUsername] = React.useState('Guest');
 // userType can be [guest, login, admin, agent, customer]
 
-    // fetch('http://localhost:5000/auth/getSessionInfo', {
-    //     mode: 'cors',
-    //     method: 'POST',
-    //     headers: {
-    //         'Content-Type': 'application/json',
-    //     },
-    //     body:JSON.stringify('')
-    // }).then(res => {
-    //     console.log('res',res)
-    //     return res.json()
-    // }).then(result => {
-    //     if(result.status=='success'){setUserType(result.user_type)}
-    //     if(result.status=='failed'){console.log('No login info found')}
-    // });
+    fetch('http://localhost:5000/auth/getSessionInfo', {
+        mode: 'cors',
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body:JSON.stringify('')
+    }).then(res => {
+        console.log('res',res)
+        return res.json()
+    }).then(result => {
+        if(result.status=='success'){setUserType(result.user_type)}
+        if(result.status=='failed'){console.log('No login info found')}
+    });
 
     console.log(userType)
     if (userType=='guest') {
