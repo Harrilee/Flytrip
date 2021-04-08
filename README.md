@@ -12,3 +12,7 @@ for Windows
 set FLASK_APP=flywire
 flask init-db
 ```
+## Run Front End
+```bat
+npm start
+```
