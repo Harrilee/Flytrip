@@ -58,6 +58,23 @@
   font-size:large;
 }
 
+.price_sold_out{
+  color: #b7b7b7;
+  font-size:large;
+}
+
+.price_sold_out:after{
+  content:"SOLD OUT";
+  color: #b7b7b7;
+  font-size:xx-small;
+  transform: rotate(25deg);
+  display: block;
+  position: relative;
+  left: 4.5em;
+  bottom: 1em;
+
+}
+
 .time{
   text-align: center;
   color: #1890ff;

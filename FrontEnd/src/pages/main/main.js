@@ -154,17 +154,17 @@ function Tickets() {
                                         </div>
                                     </Col>
                                     <Col span={4}>
-                                        <div className={'price'}>
+                                        <div className={d.ECSellable===true?'price':'price_sold_out'}>
                                             {'￥' + formatNumber(d.ECprice)}
                                         </div>
                                     </Col>
                                     <Col span={4}>
-                                        <div className={'price'}>
+                                        <div className={d.FCSellable===true?'price':'price_sold_out'}>
                                             {'￥' + formatNumber(d.BCprice)}
                                         </div>
                                     </Col>
                                     <Col span={4}>
-                                        <div className={'price'}>
+                                        <div className={d.FCSellable===true?'price':'price_sold_out'}>
                                             {'￥' + formatNumber(d.FCprice)}
                                         </div>
                                     </Col>

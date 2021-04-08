@@ -1,16 +1,46 @@
 import React from 'react';
 import './customer.css';
 
-import {Layout, Menu, Breadcrumb, Row, Col, Dropdown, Form, DatePicker, Input, Button, Mentions, Empty} from 'antd';
+import {Layout, Menu, Row, Col, Form, DatePicker, Input, Button, Mentions, Empty, Modal,Descriptions } from 'antd';
 
-import {UserOutlined, LogoutOutlined, SearchOutlined} from '@ant-design/icons';
+import {UserOutlined, LogoutOutlined, SearchOutlined, ShoppingCartOutlined} from '@ant-design/icons';
 
 const {Header, Content, Footer} = Layout;
 
 function formatNumber(num) {
     return num.toString().replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1,')
 }
-
+function Buy(props){
+    const [showModal, setShowModal] = React.useState(false)
+    function handleCancel(){
+        setShowModal(false)
+    }
+    function handleOk(){
+        setShowModal(false)
+    }
+    return(<span>
+        <a onClick={(e)=>{
+            e.preventDefault();
+            setShowModal(true);
+            //todo: send purchase request
+        }}>
+            <ShoppingCartOutlined style={{margin: '0 10px'}} />
+        </a>
+            <Modal title={'Please confirm your ticket information'} visible={showModal} onOk={handleOk} onCancel={handleCancel}>
+                <Descriptions column={2} bordered={true}>
+                    <Descriptions.Item label={'Date'}>{props.ticket.date}</Descriptions.Item>
+                    <Descriptions.Item label={'Take off'}>{props.ticket.departure_time}</Descriptions.Item>
+                    <Descriptions.Item label={'Departure'} span={2}>{props.ticket.depart_city}, {props.ticket.depart_airport}</Descriptions.Item>
+                    <Descriptions.Item label={'Arrival'} span={2}>{props.ticket.arrive_city}, {props.ticket.arrive_airport}</Descriptions.Item>
+                    <Descriptions.Item label={'Class'} span={2}>
+                        {props.type==='EC'?'Economy class':
+                            props.type==='BC'?'Business class':'First Class'}
+                    </Descriptions.Item>
+                    <Descriptions.Item label={'Price'} span={2}>{props.ticket[props.type+'price']+'￥'}</Descriptions.Item>
+                </Descriptions>
+            </Modal>
+        </span>)
+}
 function TableTitle() {
     return (
         <div style={{padding: '20px 0 0 0'}}>
@@ -154,19 +184,40 @@ function Tickets() {
                                         </div>
                                     </Col>
                                     <Col span={4}>
-                                        <div className={'price'}>
-                                            {'￥' + formatNumber(d.ECprice)}
-                                        </div>
+                                        {d.ECSellable === true ?
+                                            <div className={'price'}>
+                                                {'￥' + formatNumber(d.ECprice)}
+                                                <Buy type={'EC'} ticket={d}/>
+                                            </div>
+                                            :
+                                            <div className={'price_sold_out'}>
+                                                {'￥' + formatNumber(d.ECprice)}
+                                            </div>
+                                        }
                                     </Col>
                                     <Col span={4}>
-                                        <div className={'price'}>
-                                            {'￥' + formatNumber(d.BCprice)}
-                                        </div>
+                                        {d.BCSellable === true ?
+                                            <div className={'price'}>
+                                                {'￥' + formatNumber(d.BCprice)}
+                                                <Buy type={'BC'} ticket={d}/>
+                                            </div>
+                                            :
+                                            <div className={'price_sold_out'}>
+                                                {'￥' + formatNumber(d.BCprice)}
+                                            </div>
+                                        }
                                     </Col>
                                     <Col span={4}>
-                                        <div className={'price'}>
-                                            {'￥' + formatNumber(d.FCprice)}
-                                        </div>
+                                        {d.FCSellable === true ?
+                                            <div className={'price'}>
+                                                {'￥' + formatNumber(d.FCprice)}
+                                                <Buy type={'FC'} ticket={d}/>
+                                            </div>
+                                            :
+                                            <div className={'price_sold_out'}>
+                                                {'￥' + formatNumber(d.FCprice)}
+                                            </div>
+                                        }
                                     </Col>
                                 </Row>
                             </div>
@@ -313,14 +364,9 @@ function Customer(props) {
                             </Menu>
                         </Col>
                         <Col>
-                            <a className="ant-dropdown-link" onClick={e => {
-                                e.preventDefault();
-                                props.setUserType('login');
-                            }}>
-                                Welcome, {props.username} <UserOutlined/>
-                            </a>
-                            <span>&nbsp;|&nbsp;</span>
-                            <a className="ant-dropdown-link" onClick={e => {
+
+                            <span style={{color: 'rgb(166, 173, 180)',display:'inline-block'}}>Welcome, {props.username} <UserOutlined/>&nbsp;&nbsp; |&nbsp;&nbsp; </span>
+                            <span><a className="ant-dropdown-link" onClick={e => {
                                 e.preventDefault();
                                 fetch('http://localhost:5000/auth/logout', {
                                     mode: 'cors',
@@ -341,8 +387,8 @@ function Customer(props) {
 
 
                             }}>
-                                Logout<LogoutOutlined />
-                            </a>
+                                Logout <LogoutOutlined />
+                            </a></span>
                         </Col>
                     </Row>
                 </Header>
