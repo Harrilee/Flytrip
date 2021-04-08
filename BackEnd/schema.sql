@@ -1,3 +1,5 @@
+create database if not exists flytrip;
+use flytrip;
 DROP TABLE IF EXISTS airline, airplane, airport, booking_agent, customer, flight, staff, ticket, purchase;
 
 CREATE TABLE airline

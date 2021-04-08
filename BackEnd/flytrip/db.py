@@ -1,6 +1,6 @@
 import click
 import pymysql.cursors
-from flask import current_app, g
+from flask import g
 from flask.cli import with_appcontext
 
 
@@ -43,9 +43,43 @@ def close_db(e=None):
 
 def init_db():
     db = get_db()
+    stmts = parse_sql('schema.sql')
     with db.cursor() as cursor:
-        with current_app.open_resource('schema.sql') as f:
-            cursor.execute(f.read().decode('utf8'))
+        for stmt in stmts:
+            cursor.execute(stmt)
+            print(stmt)
+            print()
+        db.commit()
+
+
+def parse_sql(filename):
+    data = open(filename, 'r').readlines()
+    stmts = []
+    DELIMITER = ';'
+    stmt = ''
+
+    for lineno, line in enumerate(data):
+        if not line.strip():
+            continue
+
+        if line.startswith('--'):
+            continue
+
+        if 'DELIMITER' in line:
+            DELIMITER = line.split()[1]
+            continue
+
+        if DELIMITER not in line:
+            stmt += line.replace(DELIMITER, ';')
+            continue
+
+        if stmt:
+            stmt += line
+            stmts.append(stmt.strip())
+            stmt = ''
+        else:
+            stmts.append(line.strip())
+    return stmts
 
 
 @click.command('init-db')
