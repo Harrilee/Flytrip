@@ -36,7 +36,6 @@ def login():
         session['user_type'] = req['user_type']  # 从数据库中获取
         session['username'] = '从数据库里面找到对应的用户名'  # 从数据库中获取
         print('after adding session:', session)
-        print(120)
         return jsonify({'status': 'success',
                         'user_type': session['user_type'],
                         'username': session['username']})
@@ -45,6 +44,15 @@ def login():
         return jsonify({'status': 'failed',
                         'msg': 'Username and password are inconsistent.'})
 
+@bp.route('/logout', methods=['POST'])
+def logout():
+    req = request.json
+    print('req:', req)
+    session.clear()
+    return jsonify({'status': 'success',
+                    'user_type': 'login',
+                    'username': ''})
+
 
 @bp.route('/getSessionInfo', methods=['POST'])
 def getSessionInfo():
@@ -52,10 +60,16 @@ def getSessionInfo():
     print('req:', req)
     print('session:', session)
     if 'username' in session:
-        print('Session found:', session['sessionID'])
-        return jsonify({'status': 'success',
-                        'user_type': session['user_type'],
-                        'username': session['username']})
+        try:
+            print('Session found:', session['username'])
+            return jsonify({'status': 'success',
+                            'user_type': session['user_type'],
+                            'username': session['username']})
+        except KeyError:
+            print('Wrong session')
+            return jsonify({'status': 'failed',
+                            'user_type': 'guest',
+                            'username': ''})
     else:
         print('No session found')
         session['username'] = '1890'

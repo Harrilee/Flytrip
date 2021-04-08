@@ -3,7 +3,7 @@ import './customer.css';
 
 import {Layout, Menu, Breadcrumb, Row, Col, Dropdown, Form, DatePicker, Input, Button, Mentions, Empty} from 'antd';
 
-import {UserOutlined, LaptopOutlined, NotificationOutlined, DownOutlined, SearchOutlined} from '@ant-design/icons';
+import {UserOutlined, LogoutOutlined, SearchOutlined} from '@ant-design/icons';
 
 const {Header, Content, Footer} = Layout;
 
@@ -318,6 +318,30 @@ function Customer(props) {
                                 props.setUserType('login');
                             }}>
                                 Welcome, {props.username} <UserOutlined/>
+                            </a>
+                            <span>&nbsp;|&nbsp;</span>
+                            <a className="ant-dropdown-link" onClick={e => {
+                                e.preventDefault();
+                                fetch('http://localhost:5000/auth/logout', {
+                                    mode: 'cors',
+                                    method: 'POST',
+                                    headers: {
+                                        'Content-Type': 'application/json',
+                                    },
+                                    credentials: 'include',
+                                    body: JSON.stringify({})
+                                }).then(res => {
+                                    return res.json()
+                                }).then(result => {
+                                    if(result.status=='success'){
+                                        props.setUserType('login');
+                                    }
+                                    if(result.status=='failed'){alert("logout failed.\n" + result.msg)}
+                                });
+
+
+                            }}>
+                                Logout<LogoutOutlined />
                             </a>
                         </Col>
                     </Row>

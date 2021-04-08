@@ -42,8 +42,9 @@ const register = (values)=>{
             mode: 'cors',
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/json',//add cookie
             },
+            credentials: 'include',
             body: JSON.stringify(values)
     }).then(res => {
         console.log('res',res)
@@ -455,6 +456,7 @@ function LoginMenu(props){
             headers: {
                 'Content-Type': 'application/json',
             },
+            credentials: 'include',
             body: JSON.stringify(values)
         }).then(res => {
             console.log('res',res)

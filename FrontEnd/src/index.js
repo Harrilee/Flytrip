@@ -19,12 +19,18 @@ function Root(){
         headers: {
             'Content-Type': 'application/json',
         },
+        credentials: 'include',
         body:JSON.stringify('')
     }).then(res => {
         console.log('res',res)
         return res.json()
     }).then(result => {
-        if(result.status=='success'){setUserType(result.user_type)}
+        if(result.status=='success'){
+            if (result.user_type!=='guest' || result.user_type!=='login') {
+                setUserType(result.user_type);
+            }
+            setUsername(result.username);
+        }
         if(result.status=='failed'){console.log('No login info found')}
     });
 
