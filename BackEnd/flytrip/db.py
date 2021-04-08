@@ -3,23 +3,6 @@ import pymysql.cursors
 from flask import g
 from flask.cli import with_appcontext
 
-
-#
-# with connection:
-#     with connection.cursor() as cursor:
-#         # Create a new record
-#         sql = "INSERT INTO `users` (`email`, `password`) VALUES (%s, %s)"
-#         cursor.execute(sql, ('webmaster@python.org', 'very-secret'))
-#
-#     connection.commit()
-#
-#     with connection.cursor() as cursor:
-#         sql = "SELECT `id`, `password` FROM `users` WHERE `email`=%s"
-#         cursor.execute(sql, ('webmaster@python.org',))
-#         result = cursor.fetchone()
-#         print(result)
-
-
 def get_db():
     if 'db' not in g:
         g.db = pymysql.connect(
