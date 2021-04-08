@@ -64,69 +64,6 @@ ticketDataSource = [
         'durationMin': 20
     },
 ]
-<< << << < HEAD: BackEnd / flytrip / testData.py
-== == == =
-
-statusDataSource = [
-    {
-        'key': '1',
-        'airline': 'China Eastern Airline',
-        'flight_num': 'MU5401',
-        'departure_time': '08:10',
-        'arrival_time': '11:05',
-        'status': 'delayed',
-        'arrive_city': 'Chengdu',
-        'arrive_airport': 'Shuangliu International Airport',
-        'depart_city': "Shanghai",
-        'depart_airport': "Hongqiao International Airport",
-        'durationHour': 3,
-        'durationMin': 50
-    },
-    {
-        'key': '2',
-        'airline': 'China International Airline',
-        'flight_num': 'CA9880',
-        'departure_time': '09:10',
-        'arrival_time': '12:05',
-        'status': 'delayed',
-        'arrive_city': 'Chengdu',
-        'arrive_airport': 'Shuangliu International Airport',
-        'depart_city': "Shanghai",
-        'depart_airport': "Hongqiao International Airport",
-        'durationHour': 2,
-        'durationMin': 20
-    },
-    {
-        'key': '3',
-        'airline': 'China International Airline',
-        'flight_num': 'CA9880',
-        'departure_time': '09:10',
-        'arrival_time': '12:05',
-        'status': 'ontime',
-        'arrive_city': 'Chengdu',
-        'arrive_airport': 'Shuangliu International Airport',
-        'depart_city': "Shanghai",
-        'depart_airport': "Hongqiao International Airport",
-        'durationHour': 2,
-        'durationMin': 20
-    },
-    {
-        'key': '4',
-        'airline': 'China International Airline',
-        'flight_num': 'CA9880',
-        'departure_time': '09:10',
-        'arrival_time': '12:05',
-        'status': 'delayed',
-        'arrive_city': 'Chengdu',
-        'arrive_airport': 'Shuangliu International Airport',
-        'depart_city': "Shanghai",
-        'depart_airport': "Hongqiao International Airport",
-        'durationHour': 2,
-        'durationMin': 20
-    },
-]
->> >> >> > 5777
-df7117ad4d26d31f91eda19493437c4c1f4a: BackEnd / testData.py
 
 statusDataSource = [
     {
