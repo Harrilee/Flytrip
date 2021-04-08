@@ -47,8 +47,6 @@ def init_db():
     with db.cursor() as cursor:
         for stmt in stmts:
             cursor.execute(stmt)
-            print(stmt)
-            print()
         db.commit()
 
 
