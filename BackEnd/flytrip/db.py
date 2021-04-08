@@ -1,7 +1,8 @@
-import pymysql.cursors
 import click
+import pymysql.cursors
 from flask import current_app, g
 from flask.cli import with_appcontext
+
 
 #
 # with connection:

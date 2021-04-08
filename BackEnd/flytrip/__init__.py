@@ -1,6 +1,8 @@
 import os
+
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
+
 from . import testData
 
 
@@ -21,21 +23,24 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    from . import db
+    from . import db, auth
     db.init_app(app)
+    app.register_blueprint(auth.bp)
 
     @app.route('/test')
     def test():
         return 'hello world!'
 
-
-
     @app.route('/', methods=['GET'])
     def GETApi():
-        print(request.args.get('action'))
-        if request.args.get('action') == 'getTickets':  # 用户（非登录）查看所有票
+        print(session)
+        print(request.args)
+        if request.args.get('action') == 'getTickets':  # Guest（非登录）查看所有票
             return jsonify({'status': 'success',
-                            'dataSource': testData.dataSource})
+                            'dataSource': testData.ticketDataSource})
+        elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
+            return jsonify({'status': 'success',
+                            'dataSource': testData.statusDataSource})
 
     # todo: session & token
 
