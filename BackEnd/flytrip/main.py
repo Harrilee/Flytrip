@@ -1,7 +1,9 @@
+import random
+
 from flask import Flask, request, jsonify, session
 from flask_cors import CORS
+
 import testData
-import random
 
 app = Flask(__name__)
 app.secret_key = 'kbckjbckjxnsudhciuhckjn'
@@ -19,8 +21,6 @@ def POSTApi():
         # failed这里可以返回各种创建失败的原因，前端都会显示msg的内容
         return jsonify({'status': 'success'})
 
-
-
     return jsonify({'msg': 'Unknown action'})
 
 
@@ -34,6 +34,7 @@ def GETApi():
     elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
         return jsonify({'status': 'success',
                         'dataSource': testData.statusDataSource})
+
 
 @app.route('/auth/login', methods=['POST'])
 def login():
@@ -52,11 +53,12 @@ def login():
         return jsonify({'status': 'failed',
                         'msg': 'Username and password are inconsistent.'})
 
+
 @app.route('/auth/getSessionInfo', methods=['POST'])
 def getSessionInfo():
     req = request.json
     print('req:', req)
-    print('session:',session)
+    print('session:', session)
     if 'username' in session:
         print('Session found:', session['sessionID'])
         return jsonify({'status': 'success',
@@ -69,5 +71,6 @@ def getSessionInfo():
         return jsonify({'status': 'failed',
                         'user_type': 'guest',
                         'username': ''})
+
 
 app.run(port=5000)

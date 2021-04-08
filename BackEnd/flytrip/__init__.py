@@ -1,6 +1,8 @@
 import os
-from flask import Flask, request, jsonify, session
+
+from flask import Flask, request, jsonify
 from flask_cors import CORS
+
 from . import testData
 
 
@@ -27,8 +29,6 @@ def create_app(test_config=None):
     @app.route('/test')
     def test():
         return 'hello world!'
-
-
 
     @app.route('/', methods=['GET'])
     def GETApi():
