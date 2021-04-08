@@ -1,7 +1,7 @@
 import React from 'react';
 import './customer.css';
 
-import {Layout, Menu, Row, Col, Form, DatePicker, Input, Button, Mentions, Empty, Modal,Descriptions } from 'antd';
+import {Layout, Menu, Row, Col, Form, DatePicker, Input, Button, Mentions, Empty, Modal,Descriptions, message } from 'antd';
 
 import {UserOutlined, LogoutOutlined, SearchOutlined, ShoppingCartOutlined} from '@ant-design/icons';
 
@@ -17,29 +17,34 @@ function Buy(props){
     }
     function handleOk(){
         setShowModal(false)
+        fetch('http://localhost:5000/api/purchase', {
+            mode: 'cors',
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            credentials: 'include',
+            body: JSON.stringify({
+                airline:props.ticket.airline,
+                flight_num: props.ticket.flight_num,
+                ticket_type:props.type,
+                date:props.ticket.date
+            })
+        }).then(res => {
+            console.log('res',res)
+            return res.json()
+        }).then(result => {
+            if(result.status=='success'){
+                message.success('Successfully ordered!')
+            }
+            if(result.status=='failed'){alert("Purchase failed\n" + result.msg)}
+        });
     }
     return(<span>
         <a onClick={(e)=>{
             e.preventDefault();
             setShowModal(true);
-            fetch('http://localhost:5000/auth/login', {
-                mode: 'cors',
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                credentials: 'include',
-                body: JSON.stringify({})
-            }).then(res => {
-                console.log('res',res)
-                return res.json()
-            }).then(result => {
-                if(result.status=='success'){
-                    props.setUserType(result.user_type);
-                    props.setUsername(result.username);
-                }
-                if(result.status=='failed'){alert("Login failed.\n" + result.msg)}
-            });
+
         }}>
             <ShoppingCartOutlined style={{margin: '0 10px'}} />
         </a>

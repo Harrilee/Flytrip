@@ -23,9 +23,10 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    from . import db, auth
+    from . import db, auth, api
     db.init_app(app)
     app.register_blueprint(auth.bp)
+    app.register_blueprint(api.bp)
 
     @app.route('/test')
     def test():
