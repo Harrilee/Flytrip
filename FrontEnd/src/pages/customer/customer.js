@@ -384,6 +384,7 @@ function UpcomingFlights() {
     )
 
 }
+
 function OrderStatus() {
     return (
         <div className={'ticket_title'}>
@@ -404,9 +405,10 @@ function OrderStatus() {
         </div>
     )
 }
+
 function MyOrders() {
     const [orderData, setOrderData] = React.useState(null)
-    if(orderData==null) {
+    if (orderData == null) {
         fetch('http://localhost:5000/api/order', {
             mode: 'cors',
             method: 'POST',
@@ -436,7 +438,7 @@ function MyOrders() {
                                  justify={'center'}>
                                 <Col span={12}>
                                     <div className={'airports'}>
-                                        {d.airline + ' | ' + d.flight_num}
+                                        {d.airline + ' | ' + d.flight_num + ' | ' + d.date}
                                     </div>
                                     <div className={'time'}>
                                         <Row align={'space-around'}>
@@ -482,7 +484,7 @@ function MyOrders() {
                                     </div>
                                 </Col>
                                 <Col span={3}>
-                                    <div className={d.status}>
+                                    <div className={d.status == "In progress" ? 'in_progress' : ""}>
                                         {d.status}
                                     </div>
                                 </Col>

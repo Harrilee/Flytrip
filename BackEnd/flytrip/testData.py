@@ -161,7 +161,7 @@ orderHistory = {
             'durationHour': 3,
             'durationMin': 50,
             'purchase_time': '2021-04-09 17:59:03',
-            'status': 'Finished'
+            'status': 'In progress'
         },
         {
             'key': '2',
