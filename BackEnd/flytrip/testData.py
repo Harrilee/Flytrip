@@ -139,3 +139,46 @@ statusDataSource = [
         'durationMin': 20
     },
 ]
+
+orderHistory = {
+    'spending': 99998,
+    'order': 5,
+    'in_progress': 2,
+    'finished': 3,
+    'details': [
+        {
+            'key': '1',
+            'date': '2021-04-08',
+            'airline': 'China Eastern Airline',
+            'flight_num': 'MU5401',
+            'departure_time': '08:10',
+            'arrival_time': '11:05',
+            'price': 2410,
+            'arrive_city': 'Chengdu',
+            'arrive_airport': 'Shuangliu International Airport',
+            'depart_city': "Shanghai",
+            'depart_airport': "Hongqiao International Airport",
+            'durationHour': 3,
+            'durationMin': 50,
+            'purchase_time': '2021-04-09 17:59:03',
+            'status': 'Finished'
+        },
+        {
+            'key': '2',
+            'date': '2021-04-20',
+            'airline': 'China Eastern Airline',
+            'flight_num': 'MU5401',
+            'departure_time': '18:15',
+            'arrival_time': '21:45',
+            'price': 2987,
+            'arrive_city': 'Chengdu',
+            'arrive_airport': 'Shuangliu International Airport',
+            'depart_city': "Shanghai",
+            'depart_airport': "Hongqiao International Airport",
+            'durationHour': 3,
+            'durationMin': 50,
+            'purchase_time': '2021-04-09 17:59:03',
+            'status': 'Finished'
+        },
+    ]
+}

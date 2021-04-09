@@ -69,9 +69,9 @@
   font-size:xx-small;
   transform: rotate(25deg);
   display: block;
-  position: relative;
-  left: 4.5em;
-  bottom: 1em;
+  position: absolute;
+  left: 6em;
+  top: -0.5em;
 
 }
 
