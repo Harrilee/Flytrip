@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button, Layout, Form, Input, Typography, Menu,Col, Row, Drawer, Select, DatePicker, Radio} from 'antd';
-import { UserOutlined, LockOutlined, MailOutlined, IdcardOutlined } from '@ant-design/icons';
+import { UserOutlined, LockOutlined, MailOutlined, IdcardOutlined, CloseSquareOutlined } from '@ant-design/icons';
 import cities from './cities.json';
 import prefixDefault from './phoPre.json';
 import './login.css'
@@ -520,6 +520,14 @@ function LoginMenu(props){
 
     )
 }
+function Ads() {
+    const [showAds, setShowAds] = React.useState(true)
+    console.log(showAds)
+    return showAds===true?<div style={{position:'fixed', marginLeft:'50%', transform:'translate(-50%,0)'}}>
+        <img src={'ads.png'} alt={"Ads"} width={'50%'}/>
+        <CloseSquareOutlined style={{position:'absolute'}} onClick={()=>setShowAds(false)}/>
+    </div>:<React.Fragment />
+}
 
 const Login = (props) => (
     <div className="App" >
@@ -531,6 +539,7 @@ const Login = (props) => (
             zIndex:-1
         }}>
         </div>
+        <Ads />
         <Layout>
             <Content>
                 <div style={{
