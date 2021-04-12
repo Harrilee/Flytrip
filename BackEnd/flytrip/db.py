@@ -38,9 +38,12 @@ def init_db():
     """
     db = get_db()
     stmts = parse_sql('schema.sql')
+    inserts = parse_sql('insert.sql')
     with db.cursor() as cursor:
         for stmt in stmts:
             cursor.execute(stmt)
+        for insert in inserts:
+            cursor.execute(insert)
         db.commit()
 
 
