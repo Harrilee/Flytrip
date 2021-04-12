@@ -1,4 +1,3 @@
-import random
 from . import testData
 from flask import (
     Blueprint, request, jsonify, session

@@ -1,14 +1,16 @@
 import random
 
-from flask import (
-    Blueprint, request, jsonify, session
-)
+from flask import (Blueprint, jsonify, request, session)
 
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
 @bp.route('/register', methods=['POST'])
 def register():
+    """
+    Register the user
+    :return: json string of the status and message
+    """
     req = request.json
     print('req:', req)
     return jsonify({'status': 'failed',
@@ -17,10 +19,12 @@ def register():
     return jsonify({'status': 'success'})
 
 
-
-
 @bp.route('/login', methods=['POST'])
 def login():
+    """
+    User login
+    :return: json string of the status and error messages
+    """
     req = request.json
     print('req:', req)
     if random.choice([True]):  # 用户登录成功
@@ -35,8 +39,13 @@ def login():
         return jsonify({'status': 'failed',
                         'msg': 'Username and password are inconsistent.'})
 
+
 @bp.route('/logout', methods=['POST'])
 def logout():
+    """
+    User logout
+    :return: json string of status, username and user type
+    """
     req = request.json
     print('req:', req)
     session.clear()
@@ -47,6 +56,10 @@ def logout():
 
 @bp.route('/getSessionInfo', methods=['POST'])
 def getSessionInfo():
+    """
+    Get current session info
+    :return: json string of the status and the session info
+    """
     req = request.json
     print('req:', req)
     print('session:', session)

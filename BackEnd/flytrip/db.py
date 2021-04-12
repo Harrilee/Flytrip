@@ -3,7 +3,12 @@ import pymysql.cursors
 from flask import g
 from flask.cli import with_appcontext
 
+
 def get_db():
+    """
+    Connect to the mysql database using pymysql
+    :return: database instance in g
+    """
     if 'db' not in g:
         g.db = pymysql.connect(
             host='localhost',
@@ -18,6 +23,9 @@ def get_db():
 
 
 def close_db(e=None):
+    """
+    Close database connection and remove it from g
+    """
     db = g.pop('db', None)
 
     if db is not None:
@@ -25,6 +33,9 @@ def close_db(e=None):
 
 
 def init_db():
+    """
+    Initialize database using schema.sql
+    """
     db = get_db()
     stmts = parse_sql('schema.sql')
     with db.cursor() as cursor:
@@ -34,6 +45,11 @@ def init_db():
 
 
 def parse_sql(filename):
+    """
+    Parse multiline SQL statements into a list of strings
+    :param filename: the name of the SQL file to parse
+    :return: list of strings for each SQL statement
+    """
     data = open(filename, 'r').readlines()
     stmts = []
     DELIMITER = ';'
@@ -66,11 +82,17 @@ def parse_sql(filename):
 @click.command('init-db')
 @with_appcontext
 def init_db_command():
-    """Clear the existing data and create new tables"""
+    """
+    Clear the existing data and create new tables using command flask init-db
+    """
     init_db()
     click.echo('Database initialized.')
 
 
 def init_app(app):
+    """
+    Initialize the app with init_db_command and ensure the app to close database connection when failing
+    :param app: app to initialize
+    """
     app.teardown_appcontext(close_db)
     app.cli.add_command(init_db_command)

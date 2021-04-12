@@ -1,6 +1,6 @@
 import os
 
-from flask import Flask, request, jsonify, session
+from flask import Flask, jsonify, request, session
 from flask_cors import CORS
 
 from . import testData
