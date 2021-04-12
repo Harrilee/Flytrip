@@ -3,6 +3,7 @@ import random
 import re
 
 from flask import (Blueprint, g, jsonify, redirect, request, session, url_for)
+from werkzeug.security import generate_password_hash
 
 from .db import get_db
 
@@ -66,9 +67,19 @@ def register():
                     "INSERT INTO customer(email, name, password, building_number, street, city, state, phone_number, "
                     "passport_number, passport_expiration, passport_country, date_of_birth) "
                     " VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
-                    (req['email'], req['firstname'] + req['lastname'], req['password'], req['building_number'],
-                     req['street'], req['city'], req['state'], req['phone'], req['passport_num'],
-                     req['passport_exp'][:10], req['passport_count'], req['date_of_birth'][:10])
+                    (
+                        req['email'],
+                        req['firstname'] + req['lastname'],
+                        generate_password_hash(req['password']),
+                        req['building_number'],
+                        req['street'],
+                        req['city'],
+                        req['state'],
+                        req['phone'],
+                        req['passport_num'],
+                        req['passport_exp'][:10],
+                        req['passport_count'],
+                        req['date_of_birth'][:10])
                 )
             db.commit()
             return jsonify({'status': 'success'})
