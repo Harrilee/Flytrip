@@ -1,6 +1,7 @@
 import functools
 import re
 
+import pymysql
 from flask import (Blueprint, g, jsonify, redirect, request, session, url_for)
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -91,6 +92,7 @@ def register():
                 )
             db.commit()
             return jsonify({'status': 'success'})
+
     elif user_type == 'agent':
         rules = {
             'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
@@ -115,6 +117,39 @@ def register():
             db.commit()
             return jsonify({'status': 'success'})
 
+    elif user_type == 'staff':
+        rules = {
+            # 'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
+            # 'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
+        }
+        if not check_regex(req, rules):
+            msg = 'Password is too simple'
+        if req['password'] != req['password2']:
+            msg = "Passwords don't match"
+
+        if msg is None:
+            try:
+                with db.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO staff(username, password, first_name, last_name, date_of_birth, airline_name) "
+                        " VALUES(%s, %s, %s, %s, %s, %s)",
+                        (
+                            req['username'],
+                            generate_password_hash(req['password']),
+                            req['firstname'],
+                            req['lastname'],
+                            req['date_of_birth'][:10],
+                            req['airline']
+                        )
+                    )
+                db.commit()
+            except pymysql.err.IntegrityError as err:
+                return jsonify({
+                    'status': 'failed',
+                    'msg': err.args[1]
+                })
+
+            return jsonify({'status': 'success'})
     return jsonify({'status': 'failed',
                     'msg': msg})
 
