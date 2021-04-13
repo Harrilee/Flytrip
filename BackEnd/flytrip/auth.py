@@ -18,7 +18,9 @@ def login_required(view):
 
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        if g.user is None:
+        print('login_required')
+        print('session: ', session)
+        if session.get('email') is None:
             return redirect(url_for('auth.login'))
 
         return view(**kwargs)
@@ -28,10 +30,13 @@ def login_required(view):
 
 @bp.before_app_request
 def load_logged_in_user():
-    user_email = session.get('user_id')
+    user_email = session.get('email')
+    print('-' * 50)
+    print(session)
 
     if user_email is None:
         g.user = None
+        print('a')
     else:
         db = get_db()
         with db.cursor() as cursor:
@@ -39,6 +44,7 @@ def load_logged_in_user():
                 'SELECT * FROM customer WHERE email = %s LIMIT 1;', (user_email,)
             )
             g.user = cursor.fetchone()
+            print('test')
             print(g.user)
 
 
@@ -51,10 +57,12 @@ def register():
     req = request.json
     db = get_db()
     msg = None
-    if req['user_type'] == 'customer':
+    user_type = req['user_type']
+    print(req)
+    if user_type == 'customer':
         rules = {
-            # 'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
-            # 'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
+            'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
+            'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
         }
         if not check_regex(req, rules):
             msg = 'Password is too simple'
@@ -83,6 +91,30 @@ def register():
                 )
             db.commit()
             return jsonify({'status': 'success'})
+    elif user_type == 'agent':
+        rules = {
+            'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
+            'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
+        }
+        if not check_regex(req, rules):
+            msg = 'Password is too simple'
+        if req['password'] != req['password2']:
+            msg = "Passwords don't match"
+
+        if msg is None:
+            with db.cursor() as cursor:
+                cursor.execute(
+                    "INSERT INTO booking_agent(email, password, booking_agent_id) "
+                    " VALUES(%s, %s, %s)",
+                    (
+                        req['email'],
+                        generate_password_hash(req['password']),
+                        req['agent_ID']
+                    )
+                )
+            db.commit()
+            return jsonify({'status': 'success'})
+
     return jsonify({'status': 'failed',
                     'msg': msg})
 
@@ -132,6 +164,8 @@ def login():
             session.clear()
             session['user_type'] = user_type
             session['username'] = user['name']
+            session['email'] = email
+            print('login function session: ', session)
             return jsonify({
                 'status': 'success',
                 'user_type': user_type,
@@ -143,6 +177,8 @@ def login():
             'msg': msg
         })
     # TODO: Implement login for other roles
+    # elif user_type == 'agent':
+
     return jsonify({'status': 'failed',
                     'msg': 'Unknown role.'})
 
@@ -185,6 +221,7 @@ def get_session_info():
     else:
         print('No session found')
         session['username'] = '1890'
+        print('something')
         print(session)
         return jsonify({'status': 'failed',
                         'user_type': 'guest',
