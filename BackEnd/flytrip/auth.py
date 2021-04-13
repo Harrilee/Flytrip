@@ -1,9 +1,8 @@
 import functools
-import random
 import re
 
 from flask import (Blueprint, g, jsonify, redirect, request, session, url_for)
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 
 from .db import get_db
 
@@ -36,9 +35,10 @@ def load_logged_in_user():
     else:
         db = get_db()
         with db.cursor() as cursor:
-            g.user = cursor.execute(
-                'SELECT * FROM customer WHERE email = %s', (user_email,)
-            ).fetchone()
+            cursor.execute(
+                'SELECT * FROM customer WHERE email = %s LIMIT 1;', (user_email,)
+            )
+            g.user = cursor.fetchone()
             print(g.user)
 
 
@@ -49,7 +49,6 @@ def register():
     :return: json string of the status and message
     """
     req = request.json
-    print('req:', req)
     db = get_db()
     msg = None
     if req['user_type'] == 'customer':
@@ -69,7 +68,7 @@ def register():
                     " VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (
                         req['email'],
-                        req['firstname'] + req['lastname'],
+                        req['firstname'] + ' ' + req['lastname'],
                         generate_password_hash(req['password']),
                         req['building_number'],
                         req['street'],
@@ -78,6 +77,7 @@ def register():
                         req['phone'],
                         req['passport_num'],
                         req['passport_exp'][:10],
+                        # TODO: Change the frontend date format
                         req['passport_count'],
                         req['date_of_birth'][:10])
                 )
@@ -110,18 +110,41 @@ def login():
     :return: json string of the status and error messages
     """
     req = request.json
+    db = get_db()
+    user_type = req['user_type']
+    email = req['email']
+    password = req['password']
+    msg = None
     print('req:', req)
-    if random.choice([True]):  # 用户登录成功
-        session['user_type'] = req['user_type']  # 从数据库中获取
-        session['username'] = '从数据库里面找到对应的用户名'  # 从数据库中获取
-        print('after adding session:', session)
-        return jsonify({'status': 'success',
-                        'user_type': session['user_type'],
-                        'username': session['username']})
-    else:  # 登录验证失败
-        # failed这里可以返回各种创建失败的原因，前端都会显示msg的内容
-        return jsonify({'status': 'failed',
-                        'msg': 'Username and password are inconsistent.'})
+    if user_type == 'customer':
+        with db.cursor() as cursor:
+            cursor.execute(
+                'SELECT * FROM customer WHERE email = %s LIMIT 1;', (email,)
+            )
+            user = cursor.fetchone()
+
+        if user is None:
+            msg = 'Incorrect username.'
+        elif not check_password_hash(user['password'], password):
+            msg = 'Incorrect password.'
+
+        if msg is None:
+            session.clear()
+            session['user_type'] = user_type
+            session['username'] = user['name']
+            return jsonify({
+                'status': 'success',
+                'user_type': user_type,
+                'username': user['name']
+            })
+        return jsonify({
+            'status': 'failed',
+            'user_type': user_type,
+            'msg': msg
+        })
+    # TODO: Implement login for other roles
+    return jsonify({'status': 'failed',
+                    'msg': 'Unknown role.'})
 
 
 @bp.route('/logout', methods=['POST'])
