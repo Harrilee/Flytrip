@@ -56,8 +56,8 @@ def register():
     print(req)
     if user_type == 'customer':
         rules = {
-            'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
-            'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
+            # 'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
+            # 'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
         }
         if not check_regex(req, rules):
             msg = 'Password is too simple'
@@ -234,6 +234,7 @@ def login():
         if msg is None:
             session.clear()
             session['user_type'] = user_type
+            session['email'] = user['email']
             session['email'] = user['email']
             session['agent_ID'] = user['booking_agent_id']
             print('login function session: ', session)
