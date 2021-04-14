@@ -23,7 +23,6 @@ def login_required(view):
         print('session: ', session)
         if session.get('email') is None:
             return redirect(url_for('auth.login'))
-
         return view(**kwargs)
 
     return wrapped_view
@@ -32,12 +31,9 @@ def login_required(view):
 @bp.before_app_request
 def load_logged_in_user():
     user_email = session.get('email')
-    print('-' * 50)
-    print(session)
 
     if user_email is None:
         g.user = None
-        print('a')
     else:
         db = get_db()
         with db.cursor() as cursor:
@@ -45,8 +41,6 @@ def load_logged_in_user():
                 'SELECT * FROM customer WHERE email = %s LIMIT 1;', (user_email,)
             )
             g.user = cursor.fetchone()
-            print('test')
-            print(g.user)
 
 
 @bp.route('/register', methods=['POST'])
@@ -95,8 +89,8 @@ def register():
 
     elif user_type == 'agent':
         rules = {
-            'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
-            'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
+            'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+'
+            # 'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
         }
         if not check_regex(req, rules):
             msg = 'Password is too simple'
@@ -120,7 +114,7 @@ def register():
     elif user_type == 'staff':
         rules = {
             # 'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
-            # 'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
+            'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
         }
         if not check_regex(req, rules):
             msg = 'Password is too simple'
@@ -179,16 +173,22 @@ def login():
     req = request.json
     db = get_db()
     user_type = req['user_type']
-    email = req['email']
     password = req['password']
     msg = None
     print('req:', req)
-    if user_type == 'customer':
+    if user_type == 'customer' or user_type == 'agent':
+        user = None
         with db.cursor() as cursor:
-            cursor.execute(
-                'SELECT * FROM customer WHERE email = %s LIMIT 1;', (email,)
-            )
-            user = cursor.fetchone()
+            if user_type == 'customer':
+                cursor.execute(
+                    'SELECT * FROM customer WHERE email = %s LIMIT 1;', (req['email'],)
+                )
+                user = cursor.fetchone()
+            elif user_type == 'agent':
+                cursor.execute(
+                    'SELECT * FROM booking_agent WHERE email = %s LIMIT 1;', (req['email'],)
+                )
+                user = cursor.fetchone()
 
         if user is None:
             msg = 'Incorrect username.'
@@ -199,7 +199,7 @@ def login():
             session.clear()
             session['user_type'] = user_type
             session['username'] = user['name']
-            session['email'] = email
+            session['email'] = req['email']
             print('login function session: ', session)
             return jsonify({
                 'status': 'success',
@@ -212,7 +212,7 @@ def login():
             'msg': msg
         })
     # TODO: Implement login for other roles
-    # elif user_type == 'agent':
+
 
     return jsonify({'status': 'failed',
                     'msg': 'Unknown role.'})
