@@ -61,7 +61,7 @@ def register():
         }
         if not check_regex(req, rules):
             msg = 'Password is too simple'
-        if req['password'] != req['password2']:
+        elif req['password'] != req['password2']:
             msg = "Passwords don't match"
         if msg is None:
             with db.cursor() as cursor:
@@ -89,13 +89,18 @@ def register():
 
     elif user_type == 'agent':
         rules = {
-            'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+'
+            # 'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+'
             # 'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
         }
         if not check_regex(req, rules):
             msg = 'Password is too simple'
-        if req['password'] != req['password2']:
+        elif req['password'] != req['password2']:
             msg = "Passwords don't match"
+        else:
+            try:
+                int(req['agent_ID'])
+            except ValueError:
+                msg = 'Agent ID should be a number'
 
         if msg is None:
             with db.cursor() as cursor:
@@ -109,6 +114,7 @@ def register():
                     )
                 )
             db.commit()
+
             return jsonify({'status': 'success'})
 
     elif user_type == 'staff':
@@ -176,17 +182,12 @@ def login():
     password = req['password']
     msg = None
     print('req:', req)
-    if user_type == 'customer' or user_type == 'agent':
+    if user_type == 'customer':
         user = None
         with db.cursor() as cursor:
             if user_type == 'customer':
                 cursor.execute(
                     'SELECT * FROM customer WHERE email = %s LIMIT 1;', (req['email'],)
-                )
-                user = cursor.fetchone()
-            elif user_type == 'agent':
-                cursor.execute(
-                    'SELECT * FROM booking_agent WHERE email = %s LIMIT 1;', (req['email'],)
                 )
                 user = cursor.fetchone()
 
@@ -198,7 +199,6 @@ def login():
         if msg is None:
             session.clear()
             session['user_type'] = user_type
-            session['username'] = user['name']
             session['email'] = req['email']
             print('login function session: ', session)
             return jsonify({
@@ -206,13 +206,78 @@ def login():
                 'user_type': user_type,
                 'username': user['name']
             })
+
         return jsonify({
             'status': 'failed',
             'user_type': user_type,
             'msg': msg
         })
-    # TODO: Implement login for other roles
 
+
+    elif user_type == 'agent':
+        user = None
+        with db.cursor() as cursor:
+            cursor.execute(
+                'SELECT * FROM booking_agent WHERE email = %s LIMIT 1;', (req['email'],)
+            )
+            user = cursor.fetchone()
+
+        if user is None:
+            msg = 'Incorrect username.'
+        elif not check_password_hash(user['password'], password):
+            msg = 'Incorrect password.'
+        else:
+            try:
+                int(req['agent_ID'])
+            except ValueError:
+                msg = 'Agent ID should be a number.'
+
+        if msg is None:
+            session.clear()
+            session['user_type'] = user_type
+            session['email'] = user['email']
+            session['agent_ID'] = user['booking_agent_id']
+            print('login function session: ', session)
+            return jsonify({
+                'status': 'success',
+                'user_type': user_type,
+                'agent_ID': user['booking_agent_id']
+            })
+        return jsonify({
+            'status': 'failed',
+            'user_type': user_type,
+            'msg': msg
+        })
+
+
+    elif user_type == 'staff':
+        user = None
+        with db.cursor() as cursor:
+            cursor.execute(
+                'SELECT * FROM staff WHERE username = %s LIMIT 1;', (req['username'],)
+            )
+            user = cursor.fetchone()
+
+        if user is None:
+            msg = 'Incorrect username.'
+        elif not check_password_hash(user['password'], password):
+            msg = 'Incorrect password.'
+
+        if msg is None:
+            session.clear()
+            session['user_type'] = user_type
+            session['username'] = req['username']
+            print('login function session: ', session)
+            return jsonify({
+                'status': 'success',
+                'user_type': user_type,
+                'username': req['username']
+            })
+        return jsonify({
+            'status': 'failed',
+            'user_type': user_type,
+            'msg': msg
+        })
 
     return jsonify({'status': 'failed',
                     'msg': 'Unknown role.'})
