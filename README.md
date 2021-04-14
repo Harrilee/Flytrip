@@ -4,12 +4,12 @@ Database course project
 ## Initialize Database
 For macos
 ```bash
-export FLASK_APP=flywire
+export FLASK_APP=flytrip
 flask init-db
 ```
 for Windows
 ```bat
-set FLASK_APP=flywire
+set FLASK_APP=flytrip
 flask init-db
 ```
 ## Run Front End
