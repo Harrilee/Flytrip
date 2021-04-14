@@ -120,7 +120,7 @@ def register():
     elif user_type == 'staff':
         rules = {
             # 'email': r'[\w\.-]+@[\w\.-]+(\.[\w]+)+',
-            'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
+            # 'password': r'^(?=.*[A-Z].*[A-Z])(?=.*[!@#$&*])(?=.*[0-9].*[0-9])(?=.*[a-z].*[a-z].*[a-z]).{8}$',
         }
         if not check_regex(req, rules):
             msg = 'Password is too simple'
@@ -213,7 +213,6 @@ def login():
             'msg': msg
         })
 
-
     elif user_type == 'agent':
         user = None
         with db.cursor() as cursor:
@@ -248,7 +247,6 @@ def login():
             'user_type': user_type,
             'msg': msg
         })
-
 
     elif user_type == 'staff':
         user = None
