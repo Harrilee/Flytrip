@@ -16,7 +16,7 @@ def purchase():
 
 
 @bp.route('/order', methods=['POST'])
-def order():
+def order():  # agent和customer共用接口
     req = request.json
     print(req)
     time.sleep(0.5)  # 测试加载效果使用

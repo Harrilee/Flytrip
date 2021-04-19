@@ -142,6 +142,9 @@ statusDataSource = [
 
 orderHistory = {
     'spending': 99998,
+    'spending30': 23569,  # The amount of spending over the past 30 days
+    'commission': 9999.8,  # ONLY AVAILABLE FOR AGENTS
+    'commission30': 2356.9,  # ONLY AVAILABLE FOR AGENTS
     'order': 5,
     'in_progress': 2,
     'finished': 3,
@@ -161,7 +164,9 @@ orderHistory = {
             'durationHour': 3,
             'durationMin': 50,
             'purchase_time': '2021-04-09 17:59:03',
-            'status': 'In progress'
+            'status': 'In progress',
+            'customer_name': 'Harry Lee',
+            'customer_email': 'hl3794@nyu.edu'
         },
         {
             'key': '2',
@@ -178,7 +183,9 @@ orderHistory = {
             'durationHour': 3,
             'durationMin': 50,
             'purchase_time': '2021-04-09 17:59:03',
-            'status': 'Finished'
+            'status': 'Finished',
+            'customer_name': 'Harry Lee 7',
+            'customer_email': 'hl3797@nyu.edu'
         },
     ]
 }
