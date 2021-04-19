@@ -5,6 +5,7 @@ import './index.css';
 import Login from './pages/login/Login.js';
 import Main from './pages/main/main.js';
 import Customer from "./pages/customer/customer";
+import Agent from "./pages/agent/agent";
 
 import reportWebVitals from './reportWebVitals';
 
@@ -45,6 +46,8 @@ function Root() {
         return <Login setUserType={setUserType} setUsername={setUsername}/>
     } else if (userType == 'customer') {
         return <Customer setUserType={setUserType} username={username}/>
+    }  else if (userType == 'agent') {
+        return <Agent setUserType={setUserType} username={username}/>
     }
 }
 

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button, Layout, Form, Input, Typography, Menu,Col, Row, Drawer, Select, DatePicker, Radio} from 'antd';
+import { Button, Layout, Form, Input, Typography, Menu,Col, Row, Drawer, Select, DatePicker, Radio, message} from 'antd';
 import { UserOutlined, LockOutlined, MailOutlined, IdcardOutlined, CloseSquareOutlined } from '@ant-design/icons';
 import cities from './cities.json';
 import prefixDefault from './phoPre.json';
@@ -51,7 +51,7 @@ const register = (values)=>{
         return res.json()
     }).then(result => {
         if(result.status=='success'){window.location.reload()}
-        if(result.status=='failed'){alert("Registration failed.\n" + result.msg)}
+        if(result.status=='failed'){message.error("Registration failed.\n" + result.msg)}
     });
 }
 function Subform(props){
@@ -467,7 +467,7 @@ function LoginMenu(props){
                 props.setUserType(result.user_type);
                 props.setUsername(result.username);
             }
-            if(result.status=='failed'){alert("Login failed.\n" + result.msg)}
+            if(result.status=='failed'){message.error("Login failed.\n" + result.msg)}
         });
 
     };
