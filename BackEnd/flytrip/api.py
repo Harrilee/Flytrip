@@ -22,3 +22,11 @@ def order():  # agent和customer共用接口
     time.sleep(0.5)  # 测试加载效果使用
     return jsonify({'status': 'success', 'data': testData.orderHistory})
     return jsonify({'status': 'failed', 'msg': 'why i failed to purchase?'})
+
+@bp.route('/admin/import_data', methods=['POST'])
+def import_data():
+    return jsonify({'status': 'success'})
+
+@bp.route('/admin/clear', methods=['POST'])
+def clear():
+    return jsonify({'status': 'success'})
