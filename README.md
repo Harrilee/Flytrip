@@ -10,7 +10,7 @@ flask init-db
 for Windows
 ```bat
 set FLASK_APP=flytrip
-flask init-db
+flask run
 ```
 ## Run Front End
 ```bat
