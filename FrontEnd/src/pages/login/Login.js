@@ -478,7 +478,7 @@ function LoginMenu(props){
                 </Form.Item>:<React.Fragment />}
     function AgentId(props){
         return(props.role==='Agent')?
-            <Form.Item name = {'agent_id'} rules={[{ required: true, message: 'Please enter your agent id' }]}>
+            <Form.Item name = {'agent_ID'} rules={[{ required: true, message: 'Please enter your agent id' }]}>
                     <Input prefix={<IdcardOutlined />} placeholder={"Agent ID"} />
             </Form.Item> :<React.Fragment />}
     function Username(props){
