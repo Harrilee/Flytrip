@@ -48,11 +48,10 @@ function Admin(props) {
                                     console.log('res',res)
                                     return res.json()
                                 }).then(result => {
-                                    if(result.status=='success'){
+                                    if(result.status==='success'){
                                         message.success('Data imported successfully');
-                                        props.setUserType('login');
                                     }
-                                    if(result.status=='failed'){message.error("Import failed.\n" + result.msg)}
+                                    if(result.status==='failed'){message.error("Import failed.\n" + result.msg)}
                                 });
                             }}><ImportOutlined />Import test data</Button>
                         </div>
@@ -70,15 +69,36 @@ function Admin(props) {
                                     console.log('res',res)
                                     return res.json()
                                 }).then(result => {
-                                    if(result.status=='success'){
+                                    if(result.status==='success'){
                                         message.success('Data cleared successfully');
                                     }
-                                    if(result.status=='failed'){message.error("Clear data failed.\n" + result.msg)}
+                                    if(result.status==='failed'){message.error("Clear data failed.\n" + result.msg)}
                                 });
                             }}><DeleteOutlined />Clear all data</Button>
                         </div>
                         <div>
-                            <Button className={'button'} size={'large'} onClick={()=>props.setUserType('login')}><RollbackOutlined />Return to login</Button>
+                            <Button className={'button'} size={'large'} onClick={
+                                ()=> {
+                                    fetch('http://localhost:5000/auth/logout', {
+                                        mode: 'cors',
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                        },
+                                        credentials: 'include',
+                                        body: JSON.stringify({})
+                                    }).then(res => {
+                                        return res.json()
+                                    }).then(result => {
+                                        if (result.status === 'success') {
+                                            props.setUserType('login');
+                                        }
+                                        if (result.status === 'failed') {
+                                            alert("logout failed.\n" + result.msg)
+                                        }
+                                    });
+                                }
+                            }><RollbackOutlined />Return to login</Button>
                         </div>
 
 

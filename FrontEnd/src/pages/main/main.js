@@ -107,8 +107,8 @@ function Tickets() {
                         </Row>
                     </Form>
                 </div>
-                {dataSource==''?<React.Fragment />:
-                    dataSource==[]?<Empty style={{margin: '100px 0'}}/>:<TableTitle/>}
+                {dataSource===''?<React.Fragment />:
+                    dataSource===[]?<Empty style={{margin: '100px 0'}}/>:<TableTitle/>}
                 {
                     dataSource.map((d) => {
                         return (
@@ -223,8 +223,8 @@ function UpcomingFlights() {
                     </Form>
                 </div>
                 <div style={{padding: '20px'}}>
-                    {dataSource==''?<React.Fragment />:
-                        dataSource==[]?<Empty style={{margin: '100px 0'}}/>:<FlightStatus/>}
+                    {dataSource===''?<React.Fragment />:
+                        dataSource.length===0 ?<Empty style={{margin: '100px 0'}}/>:<FlightStatus/>}
                     {
                         dataSource.map((d) => {
                             return (
@@ -322,8 +322,8 @@ function Main(props) {
                         </Col>
                     </Row>
                 </Header>
-                {mainMenu == 'tickets' ? <Tickets/> : <React.Fragment/>}
-                {mainMenu == 'upcoming_flights' ? <UpcomingFlights/> : <React.Fragment/>}
+                {mainMenu === 'tickets' ? <Tickets/> : <React.Fragment/>}
+                {mainMenu === 'upcoming_flights' ? <UpcomingFlights/> : <React.Fragment/>}
                 <Footer style={{textAlign: 'center'}}>@Harry Lee, Zihang Xia | CSCI-SHU 213 Databases Course
                     Project</Footer>
             </Layout>

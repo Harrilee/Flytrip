@@ -306,7 +306,8 @@ def logout():
 
 
 @bp.route('/getSessionInfo', methods=['POST'])
-@login_required
+# @login_required
+# Harry: 我这里前端会报method not allowed的错，先去掉了
 def get_session_info():
     """
     Get current session info

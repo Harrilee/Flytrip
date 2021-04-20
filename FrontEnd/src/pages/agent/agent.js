@@ -23,7 +23,7 @@ function Buy(props) {
     }
 
     function handleOk() {
-        if (document.getElementById('customerEmail').value == '') {
+        if (document.getElementById('customerEmail').value === '') {
             message.error("Customer email cannot be empty!")
             return
         }
@@ -45,11 +45,11 @@ function Buy(props) {
             console.log('res', res)
             return res.json()
         }).then(result => {
-            if (result.status == 'success') {
+            if (result.status === 'success') {
                 setShowModal(false)
                 message.success('Successfully ordered!')
             }
-            if (result.status == 'failed') {
+            if (result.status === 'failed') {
                 message.error("Purchase failed\n" + result.msg)
             }
         });
@@ -183,8 +183,8 @@ function Tickets() {
                         </Row>
                     </Form>
                 </div>
-                {dataSource == '' ? <React.Fragment/> :
-                    dataSource == [] ? <Empty style={{margin: '100px 0'}}/> : <TableTitle/>}
+                {dataSource === '' ? <React.Fragment/> :
+                    dataSource === [] ? <Empty style={{margin: '100px 0'}}/> : <TableTitle/>}
                 {
                     dataSource.map((d) => {
                         return (
@@ -320,8 +320,8 @@ function UpcomingFlights() {
                     </Form>
                 </div>
                 <div style={{padding: '20px'}}>
-                    {dataSource == '' ? <React.Fragment/> :
-                        dataSource == [] ? <Empty style={{margin: '100px 0'}}/> : <FlightStatus/>}
+                    {dataSource === '' ? <React.Fragment/> :
+                        dataSource.length===0 ? <Empty style={{margin: '100px 0'}}/> : <FlightStatus/>}
                     {
                         dataSource.map((d) => {
                             return (
@@ -415,7 +415,7 @@ function OrderStatus() {
 
 function MyOrders() {
     const [orderData, setOrderData] = React.useState(null)
-    if (orderData == null) {
+    if (orderData === null) {
         fetch('http://localhost:5000/api/order', {
             mode: 'cors',
             method: 'POST',
@@ -427,10 +427,10 @@ function MyOrders() {
         }).then(res => {
             return res.json()
         }).then(result => {
-            if (result.status == 'success') {
+            if (result.status === 'success') {
                 setOrderData(result.data)
             }
-            if (result.status == 'failed') {
+            if (result.status === 'failed') {
                 alert("logout failed.\n" + result.msg)
             }
         });
@@ -494,7 +494,7 @@ function MyOrders() {
                                     </div>
                                 </Col>
                                 <Col span={3}>
-                                    <div className={d.status == "In progress" ? 'in_progress' : ""}>
+                                    <div className={d.status === "In progress" ? 'in_progress' : ""}>
                                         {d.status}
                                     </div>
                                 </Col>
@@ -571,9 +571,9 @@ function MyOrders() {
             </div>
             <div className="site-layout-content">
                 <div style={{padding: '20px'}}>
-                    {orderData == null ? <React.Fragment/> :
-                        orderData.data == [] ? <Empty style={{margin: '100px 0'}}/> : <OrderStatus/>}
-                    {orderData == null ? <React.Fragment/> : <OrderList orderData={orderData}/>}
+                    {orderData === null ? <React.Fragment/> :
+                        orderData.data === [] ? <Empty style={{margin: '100px 0'}}/> : <OrderStatus/>}
+                    {orderData === null ? <React.Fragment/> : <OrderList orderData={orderData}/>}
 
                 </div>
             </div>
@@ -602,7 +602,7 @@ function Agent(props) {
                         <Col>
 
                             <span style={{color: 'rgb(166, 173, 180)', display: 'inline-block'}}>Welcome,
-                                {props.username} <UserOutlined/>&nbsp;&nbsp; |&nbsp;&nbsp; </span>
+                                {' '+props.username} <UserOutlined/>&nbsp;&nbsp; |&nbsp;&nbsp; </span>
                             <span><a className="ant-dropdown-link" onClick={e => {
                                 e.preventDefault();
                                 fetch('http://localhost:5000/auth/logout', {
@@ -616,10 +616,10 @@ function Agent(props) {
                                 }).then(res => {
                                     return res.json()
                                 }).then(result => {
-                                    if (result.status == 'success') {
+                                    if (result.status === 'success') {
                                         props.setUserType('login');
                                     }
-                                    if (result.status == 'failed') {
+                                    if (result.status === 'failed') {
                                         alert("logout failed.\n" + result.msg)
                                     }
                                 });
@@ -631,9 +631,9 @@ function Agent(props) {
                         </Col>
                     </Row>
                 </Header>
-                {mainMenu == 'tickets' ? <Tickets/> : <React.Fragment/>}
-                {mainMenu == 'upcoming_flights' ? <UpcomingFlights/> : <React.Fragment/>}
-                {mainMenu == 'orders' ? <MyOrders/> : <React.Fragment/>}
+                {mainMenu === 'tickets' ? <Tickets/> : <React.Fragment/>}
+                {mainMenu === 'upcoming_flights' ? <UpcomingFlights/> : <React.Fragment/>}
+                {mainMenu === 'orders' ? <MyOrders/> : <React.Fragment/>}
                 <Footer style={{textAlign: 'center'}}>@Harry Lee, Zihang Xia | CSCI-SHU 213 Databases Course
                     Project</Footer>
             </Layout>

@@ -33,7 +33,7 @@ const options = [
     { label: 'Admin', value: 'admin'}
 ];
 const register = (values)=>{
-    if (values.phone_prefix!=undefined) values.phone = values.phone_prefix+' '+values.phone_number
+    if (values.phone_prefix!==undefined) values.phone = values.phone_prefix+' '+values.phone_number
     values.action='register'
     console.log(JSON.stringify(values));
     //拿到注册请求返回结果，如果正确，刷新页面；否则提示错误
@@ -50,8 +50,8 @@ const register = (values)=>{
         console.log('res',res)
         return res.json()
     }).then(result => {
-        if(result.status=='success'){window.location.reload()}
-        if(result.status=='failed'){message.error("Registration failed.\n" + result.msg)}
+        if(result.status==='success'){window.location.reload()}
+        if(result.status==='failed'){message.error("Registration failed.\n" + result.msg)}
     });
 }
 function Subform(props){
@@ -462,12 +462,12 @@ function LoginMenu(props){
             console.log('res',res)
             return res.json()
         }).then(result => {
-            if(result.status=='success'){
+            if(result.status==='success'){
                 console.log("logged in as "+values.user_type);
                 props.setUserType(result.user_type);
                 props.setUsername(result.username);
             }
-            if(result.status=='failed'){message.error("Login failed.\n" + result.msg)}
+            if(result.status==='failed'){message.error("Login failed.\n" + result.msg)}
         });
 
     };
