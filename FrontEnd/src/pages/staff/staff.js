@@ -2,7 +2,7 @@ import React from 'react';
 import './staff.css';
 
 import {
-    Layout, Menu, Row, Col, Form, DatePicker, Input, Button,
+    Layout, Menu, Row, Col, Form, DatePicker, Input, Button, Table, Divider,
     Mentions, Empty, Modal, Descriptions, message, Card, Statistic, Popover, Checkbox, Select, TimePicker
 } from 'antd';
 
@@ -126,6 +126,27 @@ function FlightStatus() {
                 </Col>
                 <Col span={4}>
                     Flight Status
+                </Col>
+            </Row>
+        </div>
+    )
+}
+
+function FlightStatus_Manage() {
+    return (
+        <div className={'ticket_title'}>
+            <Row gutter={16}>
+                <Col span={12}>
+
+                </Col>
+                <Col span={5}>
+
+                </Col>
+                <Col span={4}>
+                    Flight Status
+                </Col>
+                <Col span={3}>
+                    Passengers
                 </Col>
             </Row>
         </div>
@@ -394,193 +415,127 @@ function UpcomingFlights() {
 
 }
 
-function OrderStatus() {
+function Passenger(props) {
+    const [isModalVisible, setIsModalVisible] = React.useState(false);
+    const [passenger, setPassenger] = React.useState({})
+    const {name, email} = props;
     return (
-        <div className={'ticket_title'}>
-            <Row gutter={16}>
-                <Col span={12}>
-                    Order
-                </Col>
-                <Col span={5}>
-                    Purchase Time
-                </Col>
-                <Col span={4}>
-                    Customer
-                </Col>
-                <Col span={3}>
-                    Order Status
-                </Col>
-            </Row>
-        </div>
+        <>
+            <a onClick={e => {
+                e.preventDefault();
+                setIsModalVisible(true)
+                fetch('http://localhost:5000/api/get_passenger_info', {
+                    mode: 'cors',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({email: email})
+                }).then(res => {
+                    return res.json()
+                }).then(result => {
+                    if (result.status === 'success') {
+                        setPassenger(result.data)
+                    }
+                    if (result.status === 'failed') {
+                        message.error("Error getting passengers info.\n" + result.msg)
+                    }
+                });
+            }}>{name}</a>
+            <Modal title={'Passenger - ' + name} visible={isModalVisible} width={850}
+                   onOk={() => setIsModalVisible(false)}
+                   onCancel={() => {
+                       setIsModalVisible(false)
+                   }}
+                   cancelButtonProps={{hidden: 'true'}}>
+                {passenger === {} ? <Empty/> : <Descriptions bordered column={6} size={'small'}>
+                    <Descriptions.Item label="First Name" span={3}>{passenger.firstname}</Descriptions.Item>
+                    <Descriptions.Item label="Last Name" span={3}>{passenger.lastname}</Descriptions.Item>
+                    <Descriptions.Item label="Date of Birth" span={6}>{passenger.date_of_birth}</Descriptions.Item>
+                    <Descriptions.Item label="Email" span={6}>{passenger.email}</Descriptions.Item>
+                    <Descriptions.Item label="Phone Number" span={6}>{passenger.phone_number}</Descriptions.Item>
+                    <Descriptions.Item label="Street" span={2}>{passenger.street}</Descriptions.Item>
+                    <Descriptions.Item label="City" span={2}>{passenger.city}</Descriptions.Item>
+                    <Descriptions.Item label="State" span={2}>{passenger.state}</Descriptions.Item>
+                    <Descriptions.Item label="Passport Number" span={2}>{passenger.passport_number}</Descriptions.Item>
+                    <Descriptions.Item label="Passport Expiration"
+                                       span={2}>{passenger.passport_expiration}</Descriptions.Item>
+                    <Descriptions.Item label="Passport Country"
+                                       span={2}>{passenger.passport_country}</Descriptions.Item>
+                </Descriptions>}
+            </Modal>
+        </>
     )
 }
 
-function MyOrders() {
-    const [orderData, setOrderData] = React.useState(null)
-    if (orderData === null) {
-        fetch('http://localhost:5000/api/order', {
-            mode: 'cors',
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            credentials: 'include',
-            body: JSON.stringify({})
-        }).then(res => {
-            return res.json()
-        }).then(result => {
-            if (result.status === 'success') {
-                setOrderData(result.data)
-            }
-            if (result.status === 'failed') {
-                alert("logout failed.\n" + result.msg)
-            }
-        });
-    }
-
-    function OrderList(props) {
-        return (
-            <div>
-                {props.orderData.details.map((d) => {
-                    return (<div className={'ticket'} key={d.key}>
-                            <Row gutter={16} style={{minHeight: '100px'}} align={'middle'}
-                                 justify={'center'}>
-                                <Col span={12}>
-                                    <div className={'airports'}>
-                                        {d.airline + ' | ' + d.flight_num + ' | ' + d.date}
-                                    </div>
-                                    <div className={'time'}>
-                                        <Row align={'space-around'}>
-                                            <Col span={11} style={{textAlign: 'right'}}>
-                                                {d.departure_time}
-                                            </Col>
-                                            <Col span={2}>
-                                            </Col>
-                                            <Col span={11} style={{textAlign: 'left'}}>
-                                                {d.arrival_time}
-                                            </Col>
-                                        </Row>
-                                    </div>
-                                    <div className={'airports'}>
-                                        <Row align={'middle'} justify={'bottomCenter'}>
-                                            <Col span={11} style={{textAlign: 'right'}}>
-                                                {d.depart_airport}
-                                            </Col>
-                                            <Col span={2}>
-                                                <div style={{
-                                                    borderBottom: 'black solid 0.5px',
-                                                    transform: 'translateY(2px)',
-                                                    margin: '0 10px'
-                                                }}/>
-                                            </Col>
-                                            <Col span={11} style={{textAlign: 'left'}}>
-                                                {d.arrive_airport}
-                                            </Col>
-                                        </Row>
-                                    </div>
-                                    <div className={"duration"}>
-                                        {d.durationHour + 'h ' + d.durationMin + 'min'}
-                                    </div>
-                                </Col>
-                                <Col span={5}>
-                                    <div>
-                                        {d.purchase_time}
-                                    </div>
-                                </Col>
-                                <Col span={4}>
-                                    <div>
-                                        <Popover content={'Email: ' + d.customer_email} title={d.customer_name}
-                                                 trigger="hover">
-                                            <ContactsOutlined style={{marginRight: '10px'}}/>
-                                        </Popover>
-                                        {d.customer_name}
-                                    </div>
-                                </Col>
-                                <Col span={3}>
-                                    <div className={d.status === "In progress" ? 'in_progress' : ""}>
-                                        {d.status}
-                                    </div>
-                                </Col>
-                            </Row>
-                        </div>
-
-                    )
-                })}
-            </div>
-
-        )
-    }
-
+function ManagePassengers(props) {
+    const [isModalVisible, setIsModalVisible] = React.useState(false);
+    const [passengers, setPassengers] = React.useState({
+        FC: [],
+        BC: [],
+        EC: [],
+    })
+    const tableCols = [{
+        title: 'Name',
+        dataIndex: 'name',
+        key: 'name',
+        render: (text, record) => <Passenger name={text} email={record.email}/>
+    },
+        {
+            title: 'Email',
+            dataIndex: 'email',
+            key: 'email'
+        }
+    ]
+    const {d} = props
     return (
-        <Content style={{padding: '50px 50px', minHeight: '90vh'}}>
-            <div style={{margin: '0 10px 10px'}}>
-                <Row gutter={16}>
-                    <Col span={6}>
-                        <Card bordered={false}>
-                            <Statistic
-                                title="Total selling / Past 30 days"
-                                precision={2}
-                                suffix=""
-                                value={orderData === null ? true : formatNumber(orderData.spending) + '￥ / ' + formatNumber(orderData.spending30) + '￥'}
-                                loading={orderData === null ? true : false}
-                            />
-                        </Card>
-                    </Col>
-                    <Col span={6}>
-                        <Card bordered={false}>
-                            <Statistic
-                                title="Average commission"
-                                precision={2}
-                                suffix=""
-                                value={orderData === null ? true : formatNumber((orderData.commission / orderData.order).toFixed(2)) + '￥'}
-                                loading={orderData === null ? true : false}
-                            />
-                        </Card>
-                    </Col>
-                    <Col span={4}>
-                        <Card bordered={false}>
-                            <Statistic
-                                title="Total order"
-                                value={orderData === null ? true : orderData.order}
-                                loading={orderData === null ? true : false}
-                                precision={0}
-                                suffix=""
-                            />
-                        </Card>
-                    </Col>
-                    <Col span={4}>
-                        <Card bordered={false}>
-                            <Statistic
-                                title="Order in progress"
-                                value={orderData === null ? true : orderData.in_progress}
-                                loading={orderData === null ? true : false}
-                                precision={0}
-                                suffix=""
-                            />
-                        </Card>
-                    </Col>
-                    <Col span={4}>
-                        <Card bordered={false}>
-                            <Statistic
-                                title="Finished order"
-                                value={orderData === null ? true : orderData.finished}
-                                loading={orderData === null ? true : false}
-                                precision={0}
-                                suffix=""
-                            />
-                        </Card>
-                    </Col>
-                </Row>
-            </div>
-            <div className="site-layout-content">
-                <div style={{padding: '20px'}}>
-                    {orderData === null ? <React.Fragment/> :
-                        orderData.data === [] ? <Empty style={{margin: '100px 0'}}/> : <OrderStatus/>}
-                    {orderData === null ? <React.Fragment/> : <OrderList orderData={orderData}/>}
+        <>
+            <a onClick={e => {
+                e.preventDefault();
+                setIsModalVisible(true)
+                fetch('http://localhost:5000/api/get_passengers', {
+                    mode: 'cors',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify(d)
+                }).then(res => {
+                    return res.json()
+                }).then(result => {
+                    if (result.status === 'success') {
+                        setPassengers(result.data)
+                    }
+                    if (result.status === 'failed') {
+                        message.error("Error getting passengers.\n" + result.msg)
+                    }
+                });
+            }}>View</a>
+            <Modal title={d.flight_num + ' - Passengers'} visible={isModalVisible} onOk={() => setIsModalVisible(false)}
+                   onCancel={() => {
+                       setIsModalVisible(false)
+                   }}
+                   cancelButtonProps={{hidden: 'true'}} width={900}>
+                <Divider orientation="center" plain>
+                    First Class
+                </Divider>
+                {passengers.FC.length === 0 ? <Empty/> :
+                    <Table dataSource={passengers.FC} columns={tableCols} size="small"/>}
+                <Divider orientation="center" plain>
+                    Business Class
+                </Divider>
+                {passengers.BC.length === 0 ? <Empty/> :
+                    <Table dataSource={passengers.BC} columns={tableCols} size="small"/>}
+                <Divider orientation="center" plain>
+                    Economy Class
+                </Divider>
+                {passengers.EC.length === 0 ? <Empty/> :
+                    <Table dataSource={passengers.EC} columns={tableCols} size="small"/>}
+            </Modal>
+        </>
 
-                </div>
-            </div>
-        </Content>
     )
 }
 
@@ -628,13 +583,9 @@ function ManageStatusCard(props) {
                         {d.durationHour + 'h ' + d.durationMin + 'min'}
                     </div>
                 </Col>
-                <Col span={4}>
+                <Col span={5}>
                     <div className={'price'}>
 
-                    </div>
-                </Col>
-                <Col span={4}>
-                    <div className={'price'}>
                     </div>
                 </Col>
                 <Col span={4}>
@@ -672,6 +623,9 @@ function ManageStatusCard(props) {
                             <Select.Option value="arrived">arrived</Select.Option>
                         </Select>
                     </div>
+                </Col>
+                <Col span={3}>
+                    <ManagePassengers d={d}/>
                 </Col>
             </Row>
         </div>
@@ -720,7 +674,8 @@ function Manage() {
                         </div>
                         <div style={{padding: '20px'}}>
                             {
-                                filteredData.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <FlightStatus/>}
+                                filteredData.length === 0 ? <Empty style={{margin: '100px 0'}}/> :
+                                    <FlightStatus_Manage/>}
                             {
                                 filteredData.map((d) => {
                                     return (
@@ -781,7 +736,7 @@ function Manage() {
                                     form.resetFields();
                                 }
                                 if (result.status === 'failed') {
-                                    message.error('Unable to add a new plane.\n'+result.msg)
+                                    message.error('Unable to add a new plane.\n' + result.msg)
                                 }
                             });
                         }}>
@@ -913,9 +868,12 @@ function Manage() {
         </Content>)
 }
 
-function Customers() {
-    return (<div></div>)
+function Statistics() {
+    return (<Content style={{padding: '50px 50px', minHeight: '90vh'}}>
+        </Content>
+    )
 }
+
 
 function Staff(props) {
     const [mainMenu, setMainMenu] = React.useState('tickets')
@@ -933,14 +891,13 @@ function Staff(props) {
                                 <Menu.Item key="tickets">Tickets</Menu.Item>
                                 <Menu.Item key="upcoming_flights">Upcoming Flights</Menu.Item>
                                 <Menu.Item key="manage_flights">Manage Flights</Menu.Item>
-                                <Menu.Item key="customers">Customers</Menu.Item>
-                                <Menu.Item key="orders">My Orders</Menu.Item>
+                                <Menu.Item key="statistics">Statistics</Menu.Item>
                             </Menu>
                         </Col>
                         <Col>
 
                             <span style={{color: 'rgb(166, 173, 180)', display: 'inline-block'}}>Welcome,
-                                {' '+props.username} <UserOutlined/>&nbsp;&nbsp; |&nbsp;&nbsp; </span>
+                                {' ' + props.username} <UserOutlined/>&nbsp;&nbsp; |&nbsp;&nbsp; </span>
                             <span><a className="ant-dropdown-link" onClick={e => {
                                 e.preventDefault();
                                 fetch('http://localhost:5000/auth/logout', {
@@ -971,9 +928,8 @@ function Staff(props) {
                 </Header>
                 {mainMenu === 'tickets' ? <Tickets/> : <React.Fragment/>}
                 {mainMenu === 'upcoming_flights' ? <UpcomingFlights/> : <React.Fragment/>}
-                {mainMenu === 'orders' ? <MyOrders/> : <React.Fragment/>}
                 {mainMenu === 'manage_flights' ? <Manage/> : <React.Fragment/>}
-                {mainMenu === 'customers' ? <Customers/> : <React.Fragment/>}
+                {mainMenu === 'statistics' ? <Statistics/> : <React.Fragment/>}
                 <Footer style={{textAlign: 'center'}}>@Harry Lee, Zihang Xia | CSCI-SHU 213 Databases Course
                     Project</Footer>
             </Layout>

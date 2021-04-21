@@ -41,6 +41,25 @@ def statusStaffChange():  # staff 拿到“本航司”的status数据，需要�
                     'msg': 'just failed'})
 
 
+@bp.route('/get_passengers', methods=['POST'])
+def get_passengers():
+    req = request.json
+    print(req)
+    return jsonify({'status': 'success',
+                    'msg': '',
+                    'data': testData.passengers})
+    return jsonify({'status': 'failed',
+                    'msg': 'just failed'})
+
+@bp.route('/get_passenger_info', methods=['POST'])
+def get_passenger_info():
+    req = request.json
+    print(req)
+    return jsonify({'status': 'success',
+                    'msg': '',
+                    'data': testData.passenger_info})
+    return jsonify({'status': 'failed',
+                    'msg': 'just failed'})
 
 
 @bp.route('/admin/import_data', methods=['POST'])
@@ -51,6 +70,7 @@ def import_data():
 @bp.route('/admin/clear', methods=['POST'])
 def clear():
     return jsonify({'status': 'success'})
+
 
 @bp.route('/new_flight', methods=['POST'])
 def addNewFlight():

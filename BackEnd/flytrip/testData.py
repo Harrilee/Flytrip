@@ -189,3 +189,75 @@ orderHistory = {
         },
     ]
 }
+
+passengers = {
+    'FC': [
+        {
+            'name': 'Harry Lee',
+            'email': 'hl3794@nyu.edu'
+        },
+        {
+            'name': 'Harry Two',
+            'email': 'hl3794_2@nyu.edu'
+        },
+        {
+            'name': 'Harry Three',
+            'email': 'hl3794_3@nyu.edu'
+        },
+        {
+            'name': 'Harry Four',
+            'email': 'hl3794_4@nyu.edu'
+        }
+    ],
+    'BC': [
+        {
+            'name': 'BCHarry Lee',
+            'email': 'hl3794@nyu.edu'
+        },
+        {
+            'name': 'BCHarry Two',
+            'email': 'hl3794_2@nyu.edu'
+        },
+        {
+            'name': 'BCHarry Three',
+            'email': 'hl3794_3@nyu.edu'
+        },
+        {
+            'name': 'BCHarry Four',
+            'email': 'hl3794_4@nyu.edu'
+        }
+    ],
+    'EC': [
+        {
+            'name': 'ECHarry Lee',
+            'email': 'hl3794@nyu.edu'
+        },
+        {
+            'name': 'ECHarry Two',
+            'email': 'hl3794_2@nyu.edu'
+        },
+        {
+            'name': 'ECHarry Three',
+            'email': 'hl3794_3@nyu.edu'
+        },
+        {
+            'name': 'ECHarry Four',
+            'email': 'hl3794_4@nyu.edu'
+        }
+    ]
+}
+
+passenger_info = {
+    'email':'hl3794@nyu.edu',
+    'firstname': 'Harry',
+    'lastname': 'Lee',
+    'building_number': 403,
+    'street': 'Harry_street',
+    'city': 'Shanghai',
+    'state': 'China',
+    'phone_number': 10001,
+    'passport_number': 'ABCDE',
+    'passport_expiration': '1997-05-08',
+    'passport_country': 'China',
+    'date_of_birth': '2005-06-08'
+}
