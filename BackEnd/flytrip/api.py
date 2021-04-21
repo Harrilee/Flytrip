@@ -51,6 +51,7 @@ def get_passengers():
     return jsonify({'status': 'failed',
                     'msg': 'just failed'})
 
+
 @bp.route('/get_passenger_info', methods=['POST'])
 def get_passenger_info():
     req = request.json
@@ -77,4 +78,28 @@ def addNewFlight():
     req = request.json
     print(req)
     return jsonify({'status': 'success',
+                    'msg': ''})
+
+
+@bp.route('/get_selling', methods=['GET'])
+def get_selling():
+    return jsonify({'status': 'success',
+                    'data': testData.selling,  # 顺序很重要！！
+                    'msg': ''})
+@bp.route('/get_top_customer', methods=['GET'])
+def get_top_customer():
+    return jsonify({'status': 'success',
+                    'data': testData.top_customer,
+                    'msg': ''})
+@bp.route('/get_top_agents', methods=['GET'])
+def get_top_agents():
+    return jsonify({'status': 'success',
+                    'data': testData.top_agent,
+                    'msg': ''})
+@bp.route('/get_customer_orders', methods=['POST'])
+def get_customer_orders():
+    req = request.json
+    print(req)
+    return jsonify({'status': 'success',
+                    'data': testData.orderHistory,
                     'msg': ''})

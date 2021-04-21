@@ -248,7 +248,7 @@ passengers = {
 }
 
 passenger_info = {
-    'email':'hl3794@nyu.edu',
+    'email': 'hl3794@nyu.edu',
     'firstname': 'Harry',
     'lastname': 'Lee',
     'building_number': 403,
@@ -261,3 +261,97 @@ passenger_info = {
     'passport_country': 'China',
     'date_of_birth': '2005-06-08'
 }
+selling = [
+    {
+        'month': 'Apr',
+        'selling': 2031
+    },
+    {
+        'month': 'May',
+        'selling': 3059
+    },
+    {
+        'month': 'Jun',
+        'selling': 4889
+    },
+    {
+        'month': 'Jul',
+        'selling': 7809
+    },
+    {
+        'month': 'Aug',
+        'selling': 9009
+    },
+    {
+        'month': 'Sep',
+        'selling': 1056
+    },
+    {
+        'month': 'Oct',
+        'selling': 5302
+    },
+    {
+        'month': 'Nov',
+        'selling': 2032
+    },
+    {
+        'month': 'Dec',
+        'selling': 3035
+    },
+    {
+        'month': 'Jan',
+        'selling': 5068
+    },
+    {
+        'month': 'Feb',
+        'selling': 5042
+    },
+    {
+        'month': 'Mar',
+        'selling': 2895
+    }
+]
+top_customer = [
+    {
+        'name': 'Harry Lee',
+        'email': 'hl3794@nyu.edu',
+        'spending': 8900
+    },
+    {
+        'name': 'Harry Two',
+        'email': 'hl3794_2@nyu.edu',
+        'spending': 8750
+    },
+    {
+        'name': 'Harry Three',
+        'email': 'hl3794_3@nyu.edu',
+        'spending': 7500
+    },
+    {
+        'name': 'Harry Four',
+        'email': 'hl3794_4@nyu.edu',
+        'spending': 1050
+    }
+]
+top_agent = [
+    {
+        'name': 'Harry Lee Agent',
+        'email': 'hl3794@nyu.edu',
+        'selling': 62900
+    },
+    {
+        'name': 'Harry Two Agent',
+        'email': 'hl3794_2@nyu.edu',
+        'selling': 52750
+    },
+    {
+        'name': 'Harry Three Agent',
+        'email': 'hl3794_3@nyu.edu',
+        'selling': 45200
+    },
+    {
+        'name': 'Harry Four Agent',
+        'email': 'hl3794_4@nyu.edu',
+        'selling': 35200
+    }
+]

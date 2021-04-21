@@ -11,6 +11,9 @@ import {
     SendOutlined, HourglassOutlined
 } from '@ant-design/icons';
 
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
+
 const {Header, Content, Footer} = Layout;
 
 function formatNumber(num) {
@@ -652,7 +655,7 @@ function Manage() {
                     setStatusData(data.dataSource);
 
                 }
-            })
+            });
     }
 
     refresh_status()
@@ -867,9 +870,201 @@ function Manage() {
             </Row>
         </Content>)
 }
+function StatisticsViewOrders(props){
+    const [isModalVisible, setIsModalVisible] = React.useState(false);
+    const [order, setOrder] = React.useState([])
+    const tableCols = [{
+        title: 'Purchase Time',
+        dataIndex: 'purchase_time',
+        key: 'name',
+    },
+        {
+            title: 'Date',
+            dataIndex: 'date',
+            key: 'date',
+        },
+        {
+            title: 'Departure',
+            dataIndex: 'departure',
+            key: 'departure',
+            render: (text,record)=>record.departure_time+' | '+record.arrive_city+', '+record.arrive_airport
+        },
+        {
+            title: 'Arrival',
+            dataIndex: 'arrival',
+            key: 'arrival',
+            render: (text,record)=>record.arrival_time+' | '+record.depart_city+', '+record.depart_airport
+        },
+        {
+            title: 'Price',
+            dataIndex: 'price',
+            key: 'price',
+        }
+    ]
+    const {record} = props
+    return (
+        <>
+            <a onClick={e => {
+                e.preventDefault();
+                setIsModalVisible(true)
+                fetch('http://localhost:5000/api/get_customer_orders', {
+                    mode: 'cors',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({email:record.email})
+                }).then(res => {
+                    return res.json()
+                }).then(result => {
+                    if (result.status === 'success') {
+                        setOrder(result.data.details)
+                        console.log(result.data.details)
+                    }
+                    if (result.status === 'failed') {
+                        message.error("Error getting passengers.\n" + result.msg)
+                    }
+                });
+            }}>View</a>
+            <Modal title={record.name+' - Order History'} visible={isModalVisible} onOk={() => setIsModalVisible(false)}
+                   onCancel={() => {
+                       setIsModalVisible(false)
+                   }}
+                   cancelButtonProps={{hidden: 'true'}} width={1000}>
+                    <Table dataSource={order} columns={tableCols} size="small"/>
+            </Modal>
+        </>
 
+    )
+}
 function Statistics() {
+    const [sellingStats, setSellingStats] = React.useState([])
+    const [customerStats, setCustomerStats] = React.useState([])
+    const [agentStats, setAgentStats] = React.useState([])
+    fetch('http://localhost:5000/api/get_selling')
+        .then((resp) => resp.json())
+        .then(data => {
+            if (JSON.stringify(sellingStats) !== JSON.stringify(data.data)) {
+                setSellingStats(data.data);
+            }
+        });
+    fetch('http://localhost:5000/api/get_top_customer')
+        .then((resp) => resp.json())
+        .then(data => {
+            if (JSON.stringify(customerStats) !== JSON.stringify(data.data)) {
+                setCustomerStats(data.data);
+                console.log(data.data)
+            }
+        });
+    fetch('http://localhost:5000/api/get_top_agents')
+        .then((resp) => resp.json())
+        .then(data => {
+            if (JSON.stringify(agentStats) !== JSON.stringify(data.data)) {
+                setAgentStats(data.data);
+            }
+        });
+
+    const chartOptions = {
+        chart: {
+            type: 'area',
+            zoomType: 'x',
+            panning: true,
+            panKey: 'shift'
+        },
+        xAxis: {
+            categories: sellingStats.map(d => d.month)
+        },
+
+        boost: {
+            useGPUTranslations: true
+        },
+
+        title: {
+            text: ''
+        },
+
+        subtitle: {
+            text: ''
+        },
+
+        tooltip: {
+            valueDecimals: 2
+        },
+
+        series: [{
+            name: '',
+            data: sellingStats.map(d => d.selling)
+        }],
+        credits: {
+            enabled: false
+        },
+        legend: {
+            enabled: false
+        }
+
+    }
+    const customerCols = [{
+        title: 'Name',
+        dataIndex: 'name',
+        key: 'name',
+        render: (text, record) => <Passenger name={text} email={record.email}/>
+        },
+        {
+            title: 'Email',
+            dataIndex: 'email',
+            key: 'email'
+        },
+        {
+            title: 'Spending',
+            dataIndex: 'spending',
+            key: 'spending'
+        },
+        {
+            title: 'Orders',
+            dataIndex: 'orders',
+            key: 'orders',
+            render: (text, record) => <StatisticsViewOrders record={record} />
+        }
+    ]
+    const agentCols = [{
+        title: 'Name',
+        dataIndex: 'name',
+        key: 'name',
+    },
+        {
+            title: 'Email',
+            dataIndex: 'email',
+            key: 'email'
+        },
+        {
+            title: 'Selling',
+            dataIndex: 'selling',
+            key: 'selling'
+        },
+    ]
     return (<Content style={{padding: '50px 50px', minHeight: '90vh'}}>
+            <Row gutter={16}>
+                <Col span={24}>
+                    <Card title={'Selling in the Past Year'}>
+                        <HighchartsReact highcharts={Highcharts} options={chartOptions}/>
+                    </Card>
+                </Col>
+            </Row>
+            <br/>
+            <Row gutter={16}>
+                <Col span={12}>
+                    <Card title={'Customers'}>
+                        <Table dataSource={customerStats} columns={customerCols} size="small"/>
+                    </Card>
+                </Col>
+                <Col span={12}>
+                    <Card title={'Agents'}>
+                        <Table dataSource={agentStats} columns={agentCols} size="small"/>
+                    </Card>
+                </Col>
+            </Row>
+
         </Content>
     )
 }
