@@ -108,7 +108,7 @@ function Tickets() {
                     </Form>
                 </div>
                 {dataSource===''?<React.Fragment />:
-                    dataSource===[]?<Empty style={{margin: '100px 0'}}/>:<TableTitle/>}
+                    dataSource.length===0?<Empty style={{margin: '100px 0'}}/>:<TableTitle/>}
                 {
                     dataSource.map((d) => {
                         return (

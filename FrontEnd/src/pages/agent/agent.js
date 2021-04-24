@@ -7,7 +7,12 @@ import {
 } from 'antd';
 
 import {
-    UserOutlined, LogoutOutlined, SearchOutlined, ShoppingCartOutlined, ContactsOutlined} from '@ant-design/icons';
+    UserOutlined, LogoutOutlined, SearchOutlined, ShoppingCartOutlined, ContactsOutlined
+} from '@ant-design/icons';
+
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
+import moment from "moment";
 
 const {Header, Content, Footer} = Layout;
 
@@ -161,15 +166,16 @@ function Tickets() {
                             <Col span={9}>
                                 <Form.Item
                                     name={'from'}
-                                    label={"From"}>
-                                    <Input/>
+                                    label={"From"}
+                                >
+                                    <Input placeholder={'Source city/airport'}/>
                                 </Form.Item>
                             </Col>
                             <Col span={9}>
                                 <Form.Item
                                     name={'to'}
                                     label={"To"}>
-                                    <Input/>
+                                    <Input placeholder={'Destination city/airport'}/>
                                 </Form.Item>
                             </Col>
                         </Row>
@@ -184,7 +190,7 @@ function Tickets() {
                     </Form>
                 </div>
                 {dataSource === '' ? <React.Fragment/> :
-                    dataSource === [] ? <Empty style={{margin: '100px 0'}}/> : <TableTitle/>}
+                    dataSource.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <TableTitle/>}
                 {
                     dataSource.map((d) => {
                         return (
@@ -305,9 +311,9 @@ function UpcomingFlights() {
                             </Col>
                             <Col span={10}>
                                 <Form.Item
-                                    name={'airline'}
-                                    label={"Airline"}>
-                                    <Input/>
+                                    name={'date'}
+                                    label={"Date"}>
+                                    <DatePicker style={{width: '100%'}}/>
                                 </Form.Item>
                             </Col>
                             <Col span={4}>
@@ -321,7 +327,7 @@ function UpcomingFlights() {
                 </div>
                 <div style={{padding: '20px'}}>
                     {dataSource === '' ? <React.Fragment/> :
-                        dataSource.length===0 ? <Empty style={{margin: '100px 0'}}/> : <FlightStatus/>}
+                        dataSource.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <FlightStatus/>}
                     {
                         dataSource.map((d) => {
                             return (
@@ -399,13 +405,16 @@ function OrderStatus() {
                 <Col span={12}>
                     Order
                 </Col>
-                <Col span={5}>
-                    Purchase Time
+                <Col span={3}>
+                    Price
                 </Col>
                 <Col span={4}>
-                    Customer
+                    Purchase Time
                 </Col>
                 <Col span={3}>
+                    Customer
+                </Col>
+                <Col span={2}>
                     Order Status
                 </Col>
             </Row>
@@ -414,8 +423,15 @@ function OrderStatus() {
 }
 
 function MyOrders() {
-    const [orderData, setOrderData] = React.useState(null)
-    if (orderData === null) {
+    const [filteredData, setFilteredData] = React.useState({
+        data: [],
+        loaded: false,
+        range: [moment().subtract(30, 'days'), moment()],
+        orderData: []
+    })
+    const [ticketBuyer, setTicketBuyer] = React.useState([])
+    const [commission, setCommission] = React.useState([])
+    if (!filteredData.loaded) {
         fetch('http://localhost:5000/api/order', {
             mode: 'cors',
             method: 'POST',
@@ -428,18 +444,40 @@ function MyOrders() {
             return res.json()
         }).then(result => {
             if (result.status === 'success') {
-                setOrderData(result.data)
-            }
-            if (result.status === 'failed') {
+                setFilteredData({
+                    orderData: result.data,
+                    data: result.data.filter(d => {
+                        return moment(d.date).isBetween(filteredData.range[0].format("YYYY-MM-DD"), filteredData.range[1].format("YYYY-MM-DD"))
+                    }),
+                    loaded: true,
+                    range: [moment().subtract(30, 'days'), moment()],
+                })
+            } else if (result.status === 'failed') {
                 alert("logout failed.\n" + result.msg)
+            } else {
+                console.log("What's this?")
             }
         });
+    }
+    if (ticketBuyer.length === 0) {
+        fetch('http://localhost:5000/api/agent_get_top_customer_by_ticket')
+            .then((resp) => resp.json())
+            .then(data => {
+                setTicketBuyer(data.data);
+            });
+    }
+    if (commission.length === 0) {
+        fetch('http://localhost:5000/api/agent_get_top_customer_by_commission')
+            .then((resp) => resp.json())
+            .then(data => {
+                setCommission(data.data);
+            });
     }
 
     function OrderList(props) {
         return (
             <div>
-                {props.orderData.details.map((d) => {
+                {props.orderData.map((d) => {
                     return (<div className={'ticket'} key={d.key}>
                             <Row gutter={16} style={{minHeight: '100px'}} align={'middle'}
                                  justify={'center'}>
@@ -480,24 +518,31 @@ function MyOrders() {
                                         {d.durationHour + 'h ' + d.durationMin + 'min'}
                                     </div>
                                 </Col>
-                                <Col span={5}>
-                                    <div>
-                                        {d.purchase_time}
+                                <Col span={3}>
+                                    <div className={'price'}>
+                                        {d.price + "￥"}
                                     </div>
                                 </Col>
                                 <Col span={4}>
                                     <div>
-                                        <Popover content={'Email: '+d.customer_email} title={d.customer_name} trigger="hover">
-                                            <ContactsOutlined style={{marginRight:'10px'}}/>
+                                        {d.purchase_time}
+                                    </div>
+                                </Col>
+                                <Col span={3}>
+                                    <div>
+                                        <Popover content={'Email: ' + d.customer_email} title={d.customer_name}
+                                                 trigger="hover">
+                                            <ContactsOutlined style={{marginRight: '10px'}}/>
                                         </Popover>
                                         {d.customer_name}
                                     </div>
                                 </Col>
-                                <Col span={3}>
-                                    <div className={d.status === "In progress" ? 'in_progress' : ""}>
+                                <Col span={2}>
+                                    <div className={d.status}>
                                         {d.status}
                                     </div>
                                 </Col>
+
                             </Row>
                         </div>
 
@@ -511,69 +556,159 @@ function MyOrders() {
     return (
         <Content style={{padding: '50px 50px', minHeight: '90vh'}}>
             <div style={{margin: '0 10px 10px'}}>
+                <DatePicker.RangePicker value={filteredData.range} onChange={(range) => {
+                    setFilteredData({
+                        orderData: filteredData.orderData,
+                        data: filteredData.orderData.filter(d => {
+                            return moment(d.date).isBetween(range[0].format("YYYY-MM-DD"), range[1].format("YYYY-MM-DD"))
+                        }),
+                        loaded: true,
+                        range: range
+                    })
+                }}/>
                 <Row gutter={16}>
                     <Col span={6}>
                         <Card bordered={false}>
                             <Statistic
-                                title="Total selling / Past 30 days"
+                                title="Total commission"
                                 precision={2}
-                                suffix=""
-                                value={orderData === null ? true : formatNumber(orderData.spending)+'￥ / '+formatNumber(orderData.spending30)+'￥'}
-                                loading={orderData === null ? true : false}
+                                suffix="￥"
+                                value={filteredData.data.map(d => d.price).reduce((accu, cur) => {
+                                    return accu + cur
+                                }, 0) / 10}
                             />
                         </Card>
                     </Col>
                     <Col span={6}>
                         <Card bordered={false}>
                             <Statistic
-                                title="Average commission"
-                                precision={2}
-                                suffix=""
-                                value={orderData === null ? true : formatNumber((orderData.commission / orderData.order).toFixed(2))+'￥'}
-                                loading={orderData === null ? true : false}
-                            />
-                        </Card>
-                    </Col>
-                    <Col span={4}>
-                        <Card bordered={false}>
-                            <Statistic
                                 title="Total order"
-                                value={orderData === null ? true : orderData.order}
-                                loading={orderData === null ? true : false}
+                                value={filteredData.data.length}
                                 precision={0}
                                 suffix=""
                             />
                         </Card>
                     </Col>
-                    <Col span={4}>
+                    <Col span={6}>
                         <Card bordered={false}>
                             <Statistic
                                 title="Order in progress"
-                                value={orderData === null ? true : orderData.in_progress}
-                                loading={orderData === null ? true : false}
+                                value={filteredData.data.filter(d => d.status !== 'finished').length}
                                 precision={0}
                                 suffix=""
                             />
                         </Card>
                     </Col>
-                    <Col span={4}>
+                    <Col span={6}>
                         <Card bordered={false}>
                             <Statistic
                                 title="Finished order"
-                                value={orderData === null ? true : orderData.finished}
-                                loading={orderData === null ? true : false}
+                                value={filteredData.data.filter(d => d.status == 'finished').length}
                                 precision={0}
                                 suffix=""
                             />
                         </Card>
                     </Col>
                 </Row>
+                <br/>
+                <Row gutter={16}>
+                    <Col span={12}>
+                        <Card bordered={false} title={'Top 5 half-year ticket buyers'}>
+                            <HighchartsReact highcharts={Highcharts} options={
+                                {
+                                    chart: {
+                                        type: 'column'
+                                    },
+                                    title: {
+                                        text: ''
+                                    },
+                                    subtitle: {
+                                        text: ''
+                                    },
+                                    xAxis: {
+                                        categories: ticketBuyer.map(d=>d.name),
+                                        crosshair: true
+                                    },
+                                    yAxis: {
+                                        min: 0,
+                                        title: {
+                                            text: ''
+                                        }
+                                    },
+                                    tooltip: {
+                                    },
+                                    plotOptions: {
+                                        column: {
+                                            pointPadding: 0.2,
+                                            borderWidth: 0
+                                        }
+                                    },
+                                    series: [{
+                                        name: 'Customer',
+                                        data: ticketBuyer.map(d=>d.ticket)
+                                    }],
+                                    credits: {
+                                        enabled: false
+                                    },
+                                    legend: {
+                                        enabled: false
+                                    }
+                                }
+                            }/>
+                        </Card>
+                    </Col>
+                    <Col span={12}>
+                        <Card bordered={false} title={'Top 5 half-year commission contributors'}>
+                            <HighchartsReact highcharts={Highcharts} options={
+                                {
+                                    chart: {
+                                        type: 'column'
+                                    },
+                                    title: {
+                                        text: ''
+                                    },
+                                    subtitle: {
+                                        text: ''
+                                    },
+                                    xAxis: {
+                                        categories: commission.map(d=>d.name),
+                                        crosshair: true
+                                    },
+                                    yAxis: {
+                                        min: 0,
+                                        title: {
+                                            text: ''
+                                        }
+                                    },
+                                    tooltip: {
+                                    },
+                                    plotOptions: {
+                                        column: {
+                                            pointPadding: 0.2,
+                                            borderWidth: 0
+                                        }
+                                    },
+                                    series: [{
+                                        name: 'Customer',
+                                        data: commission.map(d=>d.commission)
+                                    }],
+                                    credits: {
+                                        enabled: false
+                                    },
+                                    legend: {
+                                        enabled: false
+                                    }
+                                }
+                            }/>
+                        </Card>
+                    </Col>
+                </Row>
             </div>
             <div className="site-layout-content">
+
                 <div style={{padding: '20px'}}>
-                    {orderData === null ? <React.Fragment/> :
-                        orderData.data === [] ? <Empty style={{margin: '100px 0'}}/> : <OrderStatus/>}
-                    {orderData === null ? <React.Fragment/> : <OrderList orderData={orderData}/>}
+                    {filteredData.data.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <OrderStatus/>}
+                    {filteredData.data.length === 0 ? <React.Fragment/> : <OrderList orderData={filteredData.data}/>}
 
                 </div>
             </div>
@@ -582,7 +717,7 @@ function MyOrders() {
 }
 
 function Agent(props) {
-    const [mainMenu, setMainMenu] = React.useState('tickets')
+    const [mainMenu, setMainMenu] = React.useState('orders')
 
     return (
         <React.Fragment>
@@ -602,7 +737,7 @@ function Agent(props) {
                         <Col>
 
                             <span style={{color: 'rgb(166, 173, 180)', display: 'inline-block'}}>Welcome,
-                                {' '+props.username} <UserOutlined/>&nbsp;&nbsp; |&nbsp;&nbsp; </span>
+                                {' ' + props.username} <UserOutlined/>&nbsp;&nbsp; |&nbsp;&nbsp; </span>
                             <span><a className="ant-dropdown-link" onClick={e => {
                                 e.preventDefault();
                                 fetch('http://localhost:5000/auth/logout', {

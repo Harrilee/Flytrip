@@ -241,7 +241,8 @@ def login():
             return jsonify({
                 'status': 'success',
                 'user_type': user_type,
-                'agent_ID': user['booking_agent_id']
+                'agent_ID': user['booking_agent_id'],
+                'username': user['booking_agent_id']  # 我记得agent注册的时候也有个username的
             })
         return jsonify({
             'status': 'failed',

@@ -94,7 +94,8 @@ statusDataSource = [
         'depart_city': "Shanghai",
         'depart_airport': "Hongqiao International Airport",
         'durationHour': 3,
-        'durationMin': 50
+        'durationMin': 50,
+        'date': '2021-04-08'
     },
     {
         'key': '2',
@@ -102,13 +103,14 @@ statusDataSource = [
         'flight_num': 'CA9880',
         'departure_time': '09:10',
         'arrival_time': '12:05',
-        'status': 'delayed',
+        'status': 'upcoming',
         'arrive_city': 'Chengdu',
         'arrive_airport': 'Shuangliu International Airport',
         'depart_city': "Shanghai",
         'depart_airport': "Hongqiao International Airport",
         'durationHour': 2,
-        'durationMin': 20
+        'durationMin': 20,
+        'date': '2021-04-20'
     },
     {
         'key': '3',
@@ -122,7 +124,8 @@ statusDataSource = [
         'depart_city': "Shanghai",
         'depart_airport': "Hongqiao International Airport",
         'durationHour': 2,
-        'durationMin': 20
+        'durationMin': 20,
+        'date': '2021-04-24'
     },
     {
         'key': '4',
@@ -136,59 +139,282 @@ statusDataSource = [
         'depart_city': "Shanghai",
         'depart_airport': "Hongqiao International Airport",
         'durationHour': 2,
-        'durationMin': 20
+        'durationMin': 20,
+        'date': '2021-05-20'
     },
 ]
 
-orderHistory = {
-    'spending': 99998,
-    'spending30': 23569,  # The amount of spending over the past 30 days
-    'commission': 9999.8,  # ONLY AVAILABLE FOR AGENTS
-    'commission30': 2356.9,  # ONLY AVAILABLE FOR AGENTS
-    'order': 5,
-    'in_progress': 2,
-    'finished': 3,
-    'details': [
-        {
-            'key': '1',
-            'date': '2021-04-08',
-            'airline': 'China Eastern Airline',
-            'flight_num': 'MU5401',
-            'departure_time': '08:10',
-            'arrival_time': '11:05',
-            'price': 2410,
-            'arrive_city': 'Chengdu',
-            'arrive_airport': 'Shuangliu International Airport',
-            'depart_city': "Shanghai",
-            'depart_airport': "Hongqiao International Airport",
-            'durationHour': 3,
-            'durationMin': 50,
-            'purchase_time': '2021-04-09 17:59:03',
-            'status': 'In progress',
-            'customer_name': 'Harry Lee',
-            'customer_email': 'hl3794@nyu.edu'
-        },
-        {
-            'key': '2',
-            'date': '2021-04-20',
-            'airline': 'China Eastern Airline',
-            'flight_num': 'MU5401',
-            'departure_time': '18:15',
-            'arrival_time': '21:45',
-            'price': 2987,
-            'arrive_city': 'Chengdu',
-            'arrive_airport': 'Shuangliu International Airport',
-            'depart_city': "Shanghai",
-            'depart_airport': "Hongqiao International Airport",
-            'durationHour': 3,
-            'durationMin': 50,
-            'purchase_time': '2021-04-09 17:59:03',
-            'status': 'Finished',
-            'customer_name': 'Harry Lee 7',
-            'customer_email': 'hl3797@nyu.edu'
-        },
-    ]
-}
+orderHistoryCustomer = [
+    {
+        'key': '1',
+        'date': '2021-04-08',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '08:10',
+        'arrival_time': '11:05',
+        'price': 2410,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'ontime',
+        'customer_name': 'Harry Lee',
+        'customer_email': 'hl3794@nyu.edu'
+    },
+    {
+        'key': '2',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'finished',
+        'customer_name': 'Harry Lee 7',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '3',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee 7',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '4',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee 7',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+]
+
+orderHistoryAgent = [
+    {
+        'key': '1',
+        'date': '2021-04-08',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '08:10',
+        'arrival_time': '11:05',
+        'price': 2410,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'ontime',
+        'customer_name': 'Harry Lee',
+        'customer_email': 'hl3794@nyu.edu'
+    },
+    {
+        'key': '2',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'finished',
+        'customer_name': 'Harry Lee 2',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '3',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee 2',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '4',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee 3',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '4',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee 3',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '4',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee 4',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '4',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee 4',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '4',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee ',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '4',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee 5',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+    {
+        'key': '4',
+        'date': '2021-04-20',
+        'airline': 'China Eastern Airline',
+        'flight_num': 'MU5401',
+        'departure_time': '18:15',
+        'arrival_time': '21:45',
+        'price': 2987,
+        'arrive_city': 'Chengdu',
+        'arrive_airport': 'Shuangliu International Airport',
+        'depart_city': "Shanghai",
+        'depart_airport': "Hongqiao International Airport",
+        'durationHour': 3,
+        'durationMin': 50,
+        'purchase_time': '2021-04-09 17:59:03',
+        'status': 'delayed',
+        'customer_name': 'Harry Lee 5',
+        'customer_email': 'hl3797@nyu.edu'
+    },
+]
 
 passengers = {
     'FC': [
@@ -333,25 +559,85 @@ top_customer = [
         'spending': 1050
     }
 ]
+
+top_customer_ticket = [
+    {
+        'name': 'Harry Lee',
+        'email': 'hl3794@nyu.edu',
+        'ticket': 24
+    },
+    {
+        'name': 'Harry Two',
+        'email': 'hl3794_2@nyu.edu',
+        'ticket': 22
+    },
+    {
+        'name': 'Harry Three',
+        'email': 'hl3794_3@nyu.edu',
+        'ticket': 18
+    },
+    {
+        'name': 'Harry Four',
+        'email': 'hl3794_4@nyu.edu',
+        'ticket': 16
+    },
+    {
+        'name': 'Harry Four',
+        'email': 'hl3794_4@nyu.edu',
+        'ticket': 8
+    }
+]
+
+top_customer_commission = [
+    {
+        'name': 'Harry Lee',
+        'email': 'hl3794@nyu.edu',
+        'commission': 25698
+    },
+    {
+        'name': 'Harry Two',
+        'email': 'hl3794_2@nyu.edu',
+        'commission': 22222
+    },
+    {
+        'name': 'Harry Three',
+        'email': 'hl3794_3@nyu.edu',
+        'commission': 10101
+    },
+    {
+        'name': 'Harry Four',
+        'email': 'hl3794_4@nyu.edu',
+        'commission': 5059
+    },
+    {
+        'name': 'Harry Four',
+        'email': 'hl3794_4@nyu.edu',
+        'commission': 2020
+    }
+]
 top_agent = [
     {
         'name': 'Harry Lee Agent',
         'email': 'hl3794@nyu.edu',
+        'tickets': 10,
         'selling': 62900
     },
     {
         'name': 'Harry Two Agent',
         'email': 'hl3794_2@nyu.edu',
+        'tickets': 8,
         'selling': 52750
     },
     {
         'name': 'Harry Three Agent',
         'email': 'hl3794_3@nyu.edu',
+        'tickets': 6,
         'selling': 45200
     },
     {
         'name': 'Harry Four Agent',
         'email': 'hl3794_4@nyu.edu',
+        'tickets': 5,
         'selling': 35200
     }
 ]

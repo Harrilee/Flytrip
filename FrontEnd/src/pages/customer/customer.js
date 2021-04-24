@@ -1,5 +1,6 @@
 import React from 'react';
 import './customer.css';
+import moment from 'moment'
 
 import {
     Layout, Menu, Row, Col, Form, DatePicker, Input, Button,
@@ -154,15 +155,16 @@ function Tickets() {
                             <Col span={9}>
                                 <Form.Item
                                     name={'from'}
-                                    label={"From"}>
-                                    <Input/>
+                                    label={"From"}
+                                >
+                                    <Input placeholder={'Source city/airport'}/>
                                 </Form.Item>
                             </Col>
                             <Col span={9}>
                                 <Form.Item
                                     name={'to'}
                                     label={"To"}>
-                                    <Input/>
+                                    <Input placeholder={'Destination city/airport'}/>
                                 </Form.Item>
                             </Col>
                         </Row>
@@ -177,7 +179,7 @@ function Tickets() {
                     </Form>
                 </div>
                 {dataSource === '' ? <React.Fragment/> :
-                    dataSource.length===0  ? <Empty style={{margin: '100px 0'}}/> : <TableTitle/>}
+                    dataSource.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <TableTitle/>}
                 {
                     dataSource.map((d) => {
                         return (
@@ -298,9 +300,9 @@ function UpcomingFlights() {
                             </Col>
                             <Col span={10}>
                                 <Form.Item
-                                    name={'airline'}
-                                    label={"Airline"}>
-                                    <Input/>
+                                    name={'date'}
+                                    label={"Date"}>
+                                    <DatePicker style={{width: '100%'}}/>
                                 </Form.Item>
                             </Col>
                             <Col span={4}>
@@ -314,7 +316,7 @@ function UpcomingFlights() {
                 </div>
                 <div style={{padding: '20px'}}>
                     {dataSource === '' ? <React.Fragment/> :
-                        dataSource === [] ? <Empty style={{margin: '100px 0'}}/> : <FlightStatus/>}
+                        dataSource.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <FlightStatus/>}
                     {
                         dataSource.map((d) => {
                             return (
@@ -389,13 +391,13 @@ function OrderStatus() {
     return (
         <div className={'ticket_title'}>
             <Row gutter={16}>
-                <Col span={12}>
+                <Col span={14}>
                     Order
                 </Col>
-                <Col span={4}>
-
+                <Col span={3}>
+                    Price
                 </Col>
-                <Col span={5}>
+                <Col span={4}>
                     Purchase Time
                 </Col>
                 <Col span={3}>
@@ -407,8 +409,13 @@ function OrderStatus() {
 }
 
 function MyOrders() {
-    const [orderData, setOrderData] = React.useState(null)
-    if (orderData === null) {
+    const [filteredData, setFilteredData] = React.useState({
+        data: [],
+        loaded: false,
+        range: [moment().subtract(366/2,'days'), moment()],
+        orderData: []
+    })
+    if (!filteredData.loaded) {
         fetch('http://localhost:5000/api/order', {
             mode: 'cors',
             method: 'POST',
@@ -421,10 +428,18 @@ function MyOrders() {
             return res.json()
         }).then(result => {
             if (result.status === 'success') {
-                setOrderData(result.data)
-            }
-            if (result.status === 'failed') {
+                setFilteredData({
+                    orderData: result.data,
+                    data: result.data.filter(d => {
+                        return moment(d.date).isBetween(filteredData.range[0].format("YYYY-MM-DD"), filteredData.range[1].format("YYYY-MM-DD"))
+                    }),
+                    loaded: true,
+                    range: [moment().subtract(366/2,'days'), moment()],
+                })
+            } else if (result.status === 'failed') {
                 alert("logout failed.\n" + result.msg)
+            } else {
+                console.log("What's this?")
             }
         });
     }
@@ -432,11 +447,11 @@ function MyOrders() {
     function OrderList(props) {
         return (
             <div>
-                {props.orderData.details.map((d) => {
+                {props.orderData.map((d) => {
                     return (<div className={'ticket'} key={d.key}>
                             <Row gutter={16} style={{minHeight: '100px'}} align={'middle'}
                                  justify={'center'}>
-                                <Col span={12}>
+                                <Col span={14}>
                                     <div className={'airports'}>
                                         {d.airline + ' | ' + d.flight_num + ' | ' + d.date}
                                     </div>
@@ -473,18 +488,18 @@ function MyOrders() {
                                         {d.durationHour + 'h ' + d.durationMin + 'min'}
                                     </div>
                                 </Col>
-                                <Col span={4}>
+                                <Col span={3}>
                                     <div className={'price'}>
-
+                                        {d.price+"￥"}
                                     </div>
                                 </Col>
-                                <Col span={5}>
+                                <Col span={4}>
                                     <div>
                                         {d.purchase_time}
                                     </div>
                                 </Col>
                                 <Col span={3}>
-                                    <div className={d.status === "In progress" ? 'in_progress' : ""}>
+                                    <div className={d.status}>
                                         {d.status}
                                     </div>
                                 </Col>
@@ -501,6 +516,16 @@ function MyOrders() {
     return (
         <Content style={{padding: '50px 50px', minHeight: '90vh'}}>
             <div style={{margin: '0 10px 10px'}}>
+                <DatePicker.RangePicker value={filteredData.range} onChange={(range) => {
+                    setFilteredData({
+                        orderData:filteredData.orderData,
+                        data: filteredData.orderData.filter(d => {
+                            return moment(d.date).isBetween(range[0].format("YYYY-MM-DD"), range[1].format("YYYY-MM-DD"))
+                        }),
+                        loaded: true,
+                        range: range
+                    })
+                }}/>
                 <Row gutter={16}>
                     <Col span={6}>
                         <Card bordered={false}>
@@ -508,8 +533,7 @@ function MyOrders() {
                                 title="Total spending"
                                 precision={2}
                                 suffix="￥"
-                                value={orderData === null ? true : orderData.spending}
-                                loading={orderData === null ? true : false}
+                                value={filteredData.data.map(d=>d.price).reduce((accu, cur)=>{return accu+cur},0)}
                             />
                         </Card>
                     </Col>
@@ -517,8 +541,7 @@ function MyOrders() {
                         <Card bordered={false}>
                             <Statistic
                                 title="Total order"
-                                value={orderData === null ? true : orderData.order}
-                                loading={orderData === null ? true : false}
+                                value={filteredData.data.length}
                                 precision={0}
                                 suffix=""
                             />
@@ -528,8 +551,7 @@ function MyOrders() {
                         <Card bordered={false}>
                             <Statistic
                                 title="Order in progress"
-                                value={orderData === null ? true : orderData.in_progress}
-                                loading={orderData === null ? true : false}
+                                value={filteredData.data.filter(d=>d.status!=='finished').length}
                                 precision={0}
                                 suffix=""
                             />
@@ -539,8 +561,7 @@ function MyOrders() {
                         <Card bordered={false}>
                             <Statistic
                                 title="Finished order"
-                                value={orderData === null ? true : orderData.finished}
-                                loading={orderData === null ? true : false}
+                                value={filteredData.data.filter(d=>d.status=='finished').length}
                                 precision={0}
                                 suffix=""
                             />
@@ -550,9 +571,8 @@ function MyOrders() {
             </div>
             <div className="site-layout-content">
                 <div style={{padding: '20px'}}>
-                    {orderData === null ? <React.Fragment/> :
-                        orderData.data === [] ? <Empty style={{margin: '100px 0'}}/> : <OrderStatus/>}
-                    {orderData === null ? <React.Fragment/> : <OrderList orderData={orderData}/>}
+                    {filteredData.data.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <OrderStatus/>}
+                    {filteredData.data.length === 0 ? <React.Fragment/> : <OrderList orderData={filteredData.data}/>}
 
                 </div>
             </div>
@@ -561,7 +581,7 @@ function MyOrders() {
 }
 
 function Customer(props) {
-    const [mainMenu, setMainMenu] = React.useState('tickets')
+    const [mainMenu, setMainMenu] = React.useState('orders')
 
     return (
         <React.Fragment>
@@ -581,7 +601,7 @@ function Customer(props) {
                         <Col>
 
                             <span style={{color: 'rgb(166, 173, 180)', display: 'inline-block'}}>Welcome,
-                                {' '+ props.username} <UserOutlined/>&nbsp;&nbsp; |&nbsp;&nbsp; </span>
+                                {' ' + props.username} <UserOutlined/>&nbsp;&nbsp; |&nbsp;&nbsp; </span>
                             <span><a className="ant-dropdown-link" onClick={e => {
                                 e.preventDefault();
                                 fetch('http://localhost:5000/auth/logout', {

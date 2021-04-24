@@ -8,11 +8,13 @@ import {
 
 import {
     UserOutlined, LogoutOutlined, SearchOutlined, ShoppingCartOutlined, ContactsOutlined, ReloadOutlined,
-    SendOutlined, HourglassOutlined
+    SendOutlined, HourglassOutlined, FireOutlined
 } from '@ant-design/icons';
 
 import Highcharts from 'highcharts';
 import HighchartsReact from 'highcharts-react-official';
+import moment from "moment";
+import Agent from "../agent/agent";
 
 const {Header, Content, Footer} = Layout;
 
@@ -187,15 +189,16 @@ function Tickets() {
                             <Col span={9}>
                                 <Form.Item
                                     name={'from'}
-                                    label={"From"}>
-                                    <Input/>
+                                    label={"From"}
+                                >
+                                    <Input placeholder={'Source city/airport'}/>
                                 </Form.Item>
                             </Col>
                             <Col span={9}>
                                 <Form.Item
                                     name={'to'}
                                     label={"To"}>
-                                    <Input/>
+                                    <Input placeholder={'Destination city/airport'}/>
                                 </Form.Item>
                             </Col>
                         </Row>
@@ -210,7 +213,7 @@ function Tickets() {
                     </Form>
                 </div>
                 {dataSource === '' ? <React.Fragment/> :
-                    dataSource === [] ? <Empty style={{margin: '100px 0'}}/> : <TableTitle/>}
+                    dataSource.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <TableTitle/>}
                 {
                     dataSource.map((d) => {
                         return (
@@ -331,9 +334,9 @@ function UpcomingFlights() {
                             </Col>
                             <Col span={10}>
                                 <Form.Item
-                                    name={'airline'}
-                                    label={"Airline"}>
-                                    <Input/>
+                                    name={'date'}
+                                    label={"Date"}>
+                                    <DatePicker style={{width: '100%'}}/>
                                 </Form.Item>
                             </Col>
                             <Col span={4}>
@@ -347,7 +350,7 @@ function UpcomingFlights() {
                 </div>
                 <div style={{padding: '20px'}}>
                     {dataSource === '' ? <React.Fragment/> :
-                        dataSource === [] ? <Empty style={{margin: '100px 0'}}/> : <FlightStatus/>}
+                        dataSource.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <FlightStatus/>}
                     {
                         dataSource.map((d) => {
                             return (
@@ -356,7 +359,7 @@ function UpcomingFlights() {
                                          justify={'center'}>
                                         <Col span={12}>
                                             <div className={'airports'}>
-                                                {d.airline + ' | ' + d.flight_num}
+                                                {d.airline + ' | ' + d.flight_num + ' | ' + d.date}
                                             </div>
                                             <div className={'time'}>
                                                 <Row align={'space-around'}>
@@ -545,13 +548,16 @@ function ManagePassengers(props) {
 function ManageStatusCard(props) {
     const {d} = props
     const [selVal, setSelVal] = React.useState(d.status)
+    if (selVal !== d.status) {
+        setSelVal(d.status);
+    }
     return (
         <div className={'ticket'} key={d.key}>
             <Row gutter={16} style={{minHeight: '100px'}} align={'middle'}
                  justify={'center'}>
                 <Col span={12}>
                     <div className={'airports'}>
-                        {d.airline + ' | ' + d.flight_num}
+                        {d.airline + ' | ' + d.flight_num + ' | ' + d.date}
                     </div>
                     <div className={'time'}>
                         <Row align={'space-around'}>
@@ -612,6 +618,7 @@ function ManageStatusCard(props) {
                                     d.status = val;
                                     setSelVal(val);
                                     message.success('Successfully updated status!')
+                                    props.refresh_status(true)
                                 }
                                 if (result.status === 'failed') {
                                     message.error("Error updating status.\n" + result.msg)
@@ -636,9 +643,17 @@ function ManageStatusCard(props) {
 }
 
 function Manage() {
-    const [statusData, setStatusData] = React.useState([])
-    const [filteredData, setFilteredData] = React.useState([])
-    const [form] = Form.useForm();
+    const [statusData, setStatusData] = React.useState({
+        origin: [],
+        filtered: [],
+        filterOptions: ['upcoming'],
+        loaded: false,
+        range: [moment(), moment().add(30, 'days')]
+    })
+    const [form] = Form.useForm(); //for add a new flight
+    const [new_plane_form] = Form.useForm();
+    const [new_airport_form] = Form.useForm();
+
     const filterOptions = [
         {label: 'On time', value: 'ontime'},
         {label: 'Delayed', value: 'delayed'},
@@ -647,14 +662,27 @@ function Manage() {
     ];
 
 
-    function refresh_status() {
+    function refresh_status(force_refresh = false) {
         fetch('http://localhost:5000/api/get_status_staff')
             .then((resp) => resp.json())
             .then(data => {
-                if (JSON.stringify(statusData) !== JSON.stringify(data.dataSource)) {
-                    setStatusData(data.dataSource);
+                if (!statusData.loaded || force_refresh) {
+                    setStatusData({
+                            origin: data.dataSource,
+                            filtered: data.dataSource.filter(d => {
+                                return statusData.filterOptions.includes(d.status)
+                            }).filter(d => {
+                                console.log(d, statusData.range)
+                                return moment(d.date).isBetween(statusData.range[0].format("YYYY-MM-DD"), statusData.range[1].format("YYYY-MM-DD"))
+                            }),
+                            filterOptions: statusData.filterOptions,
+                            loaded: true,
+                            range: statusData.range
+                        }
+                    );
 
                 }
+
             });
     }
 
@@ -665,25 +693,57 @@ function Manage() {
                 <Col span={16}>
                     <Card title={'Manage status'} bordered={false} className={'card'}
                           extra={<Button type={'primary'} icon={<ReloadOutlined/>}
-                                         onClick={refresh_status}>Refresh</Button>}>
+                                         onClick={() => refresh_status(true)}>Refresh</Button>}>
                         <div>
-                            <Checkbox.Group options={filterOptions} defaultValue={[]}
-                                            onChange={val => {
-                                                setFilteredData(statusData.filter(d => {
-                                                    return val.includes(d.status)
-                                                }))
-                                            }}/>
+
+                            <Row gutter={16}>
+                                <Col span={12}>
+                                    <Checkbox.Group value={statusData.filterOptions} options={filterOptions}
+                                                    defaultValue={['upcoming']}
+                                                    onChange={val => {
+                                                        setStatusData({
+                                                            origin: statusData.origin,
+                                                            filtered: statusData.origin.filter(d => {
+                                                                return val.includes(d.status)
+                                                            }).filter(d => {
+                                                                return moment(d.date).isBetween(statusData.range[0].format("YYYY-MM-DD"), statusData.range[1].format("YYYY-MM-DD"))
+                                                            }),
+                                                            filterOptions: val,
+                                                            loaded: true,
+                                                            range: statusData.range
+                                                        })
+                                                    }}/>
+                                </Col>
+                                <Col span={12} align={'end'}>
+                                    <DatePicker.RangePicker value={statusData.range}
+                                                            style={{transform: 'translateY(-5px)'}} onChange={range => {
+                                        setStatusData({
+                                            origin: statusData.origin,
+                                            filtered: statusData.origin.filter(d => {
+                                                return statusData.filterOptions.includes(d.status)
+                                            }).filter(d => {
+                                                return moment(d.date).isBetween(range[0].format("YYYY-MM-DD"), range[1].format("YYYY-MM-DD"))
+                                            }),
+                                            filterOptions: statusData.filterOptions,
+                                            loaded: true,
+                                            range: range
+                                        })
+                                    }}/>
+                                </Col>
+                            </Row>
+
+
                             <hr style={{border: 'lightgrey solid 0.5px'}}/>
                         </div>
                         <div style={{padding: '20px'}}>
                             {
-                                filteredData.length === 0 ? <Empty style={{margin: '100px 0'}}/> :
+                                statusData.filtered.length === 0 ? <Empty style={{margin: '100px 0'}}/> :
                                     <FlightStatus_Manage/>}
                             {
-                                filteredData.map((d) => {
+                                statusData.filtered.map((d) => {
                                     return (
                                         <ManageStatusCard d={d} id={d.flight_num + d.date}
-                                                          refresh_status={refresh_status()}/>
+                                                          refresh_status={refresh_status}/>
                                     )
                                 })
                             }
@@ -697,7 +757,7 @@ function Manage() {
                                 <Card>
                                     <Statistic
                                         title="On time"
-                                        value={statusData.filter(d => {
+                                        value={statusData.origin.filter(d => {
                                             return d.status === 'ontime'
                                         }).length}
                                         precision={0}
@@ -710,7 +770,7 @@ function Manage() {
                                 <Card>
                                     <Statistic
                                         title="Delayed"
-                                        value={statusData.filter(d => {
+                                        value={statusData.origin.filter(d => {
                                             return d.status === 'delayed'
                                         }).length}
                                         precision={0}
@@ -739,7 +799,7 @@ function Manage() {
                                     form.resetFields();
                                 }
                                 if (result.status === 'failed') {
-                                    message.error('Unable to add a new plane.\n' + result.msg)
+                                    message.error('Unable to add a new flight.\n' + result.msg)
                                 }
                             });
                         }}>
@@ -748,7 +808,7 @@ function Manage() {
                                     <Form.Item label={'Flight number'} name={'flight_num'} rules={[
                                         {
                                             required: true,
-                                            message: 'Please input your name',
+                                            message: 'Please enter the flight number',
                                         },
                                     ]}>
                                         <Input placeholder={'Flight number'}/>
@@ -760,7 +820,7 @@ function Manage() {
                                     <Form.Item label={'Departure date'} name={'departure_date'} rules={[
                                         {
                                             required: true,
-                                            message: 'Please input your name',
+                                            message: 'Please enter the date',
                                         },
                                     ]}>
                                         <DatePicker/>
@@ -770,7 +830,7 @@ function Manage() {
                                     <Form.Item label={'Departure time'} name={'departure_time'} rules={[
                                         {
                                             required: true,
-                                            message: 'Please input your name',
+                                            message: 'Please enter the time',
                                         },
                                     ]}>
                                         <TimePicker/>
@@ -782,7 +842,7 @@ function Manage() {
                                     <Form.Item label={'Arrival date'} name={'arrival_date'} rules={[
                                         {
                                             required: true,
-                                            message: 'Please fill in this field',
+                                            message: 'Please enter the date',
                                         },
                                     ]}>
                                         <DatePicker/>
@@ -792,7 +852,7 @@ function Manage() {
                                     <Form.Item label={'Arrival time'} name={'arrival_time'} rules={[
                                         {
                                             required: true,
-                                            message: 'Please fill in this field',
+                                            message: 'Please enter the time',
                                         },
                                     ]}>
                                         <TimePicker/>
@@ -866,11 +926,147 @@ function Manage() {
 
                         </Form>
                     </Card>
+                    <Card title={'Add a new plane'} bordered={false} className={'card'}>
+                        <Form layout={'vertical'} requiredMark={false} form={new_plane_form} onFinish={data => {
+                            fetch('http://localhost:5000/api/new_plane', {
+                                mode: 'cors',
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify(data)
+                            }).then(res => {
+                                return res.json()
+                            }).then(result => {
+                                if (result.status === 'success') {
+                                    message.success('Successfully added plane！');
+                                    new_plane_form.resetFields();
+                                }
+                                if (result.status === 'failed') {
+                                    message.error('Unable to add a new plane.\n' + result.msg)
+                                }
+                            });
+                        }}>
+                            <Row gutter={16}>
+                                <Col span={16}>
+                                    <Form.Item label={'Plane ID'} name={'id'} rules={[
+                                        {
+                                            required: true,
+                                            message: 'Please enter the plane ID',
+                                        },
+                                    ]}>
+                                        <Input placeholder={'Plane ID'}/>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                            Seats
+                            <Row gutter={16}>
+                                <Col span={8}>
+                                    <Form.Item label={'Economy Class'} name={'EC'} rules={[
+                                        {
+                                            required: true,
+                                            message: 'Please enter the seats',
+                                        },
+                                    ]}>
+                                        <Input placeholder={'Economy class price'}/>
+                                    </Form.Item>
+                                </Col>
+                                <Col span={8}>
+                                    <Form.Item label={'Business Class'} name={'BC'} rules={[
+                                        {
+                                            required: true,
+                                            message: 'Please enter the seats',
+                                        },
+                                    ]}>
+                                        <Input placeholder={'Economy class price'}/>
+                                    </Form.Item>
+                                </Col>
+                                <Col span={8}>
+                                    <Form.Item label={'First Class'} name={'FC'} rules={[
+                                        {
+                                            required: true,
+                                            message: 'Please enter the seats',
+                                        },
+                                    ]}>
+                                        <Input placeholder={'Economy class price'}/>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                            <Row glutter={16}>
+                                <Col span={24}>
+                                    <Button type={'primary'} htmlType={'submit'} style={{
+                                        position: 'absolute',
+                                        right: 0
+                                    }}>Submit</Button>
+                                </Col>
+                            </Row>
+                            <Button/>
+                        </Form>
+                    </Card>
+                    <Card title={'Add a new airport'} bordered={false} className={'card'}>
+                        <Form layout={'vertical'} requiredMark={false} form={new_airport_form} onFinish={data => {
+                            fetch('http://localhost:5000/api/new_airport', {
+                                mode: 'cors',
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                credentials: 'include',
+                                body: JSON.stringify(data)
+                            }).then(res => {
+                                return res.json()
+                            }).then(result => {
+                                if (result.status === 'success') {
+                                    message.success('Successfully added airport！');
+                                    new_airport_form.resetFields();
+                                }
+                                if (result.status === 'failed') {
+                                    message.error('Unable to add a new plane.\n' + result.msg)
+                                }
+                            });
+                        }}>
+                            <Row gutter={16}>
+                                <Col span={16}>
+                                    <Form.Item label={'Airport Name'} name={'name'} rules={[
+                                        {
+                                            required: true,
+                                            message: 'Please enter airport name',
+                                        },
+                                    ]}>
+                                        <Input placeholder={'Airport'}/>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                            <Row gutter={16}>
+                                <Col span={16}>
+                                    <Form.Item label={'City'} name={'city'} rules={[
+                                        {
+                                            required: true,
+                                            message: 'Please enter the city',
+                                        },
+                                    ]}>
+                                        <Input placeholder={'City'}/>
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                            <Row glutter={16}>
+                                <Col span={24}>
+                                    <Button type={'primary'} htmlType={'submit'} style={{
+                                        position: 'absolute',
+                                        right: 0
+                                    }}>Submit</Button>
+                                </Col>
+                            </Row>
+                            <Button/>
+                        </Form>
+                    </Card>
                 </Col>
             </Row>
         </Content>)
 }
-function StatisticsViewOrders(props){
+
+function StatisticsViewOrders(props) {
     const [isModalVisible, setIsModalVisible] = React.useState(false);
     const [order, setOrder] = React.useState([])
     const tableCols = [{
@@ -887,13 +1083,13 @@ function StatisticsViewOrders(props){
             title: 'Departure',
             dataIndex: 'departure',
             key: 'departure',
-            render: (text,record)=>record.departure_time+' | '+record.arrive_city+', '+record.arrive_airport
+            render: (text, record) => record.departure_time + ' | ' + record.arrive_city + ', ' + record.arrive_airport
         },
         {
             title: 'Arrival',
             dataIndex: 'arrival',
             key: 'arrival',
-            render: (text,record)=>record.arrival_time+' | '+record.depart_city+', '+record.depart_airport
+            render: (text, record) => record.arrival_time + ' | ' + record.depart_city + ', ' + record.depart_airport
         },
         {
             title: 'Price',
@@ -914,164 +1110,467 @@ function StatisticsViewOrders(props){
                         'Content-Type': 'application/json',
                     },
                     credentials: 'include',
-                    body: JSON.stringify({email:record.email})
+                    body: JSON.stringify({email: record.email})
                 }).then(res => {
                     return res.json()
                 }).then(result => {
                     if (result.status === 'success') {
-                        setOrder(result.data.details)
-                        console.log(result.data.details)
+                        setOrder(result.data)
+
                     }
                     if (result.status === 'failed') {
                         message.error("Error getting passengers.\n" + result.msg)
                     }
                 });
             }}>View</a>
-            <Modal title={record.name+' - Order History'} visible={isModalVisible} onOk={() => setIsModalVisible(false)}
+            <Modal title={record.name + ' - Order History'} visible={isModalVisible}
+                   onOk={() => setIsModalVisible(false)}
                    onCancel={() => {
                        setIsModalVisible(false)
                    }}
                    cancelButtonProps={{hidden: 'true'}} width={1000}>
-                    <Table dataSource={order} columns={tableCols} size="small"/>
+                <Table dataSource={order} columns={tableCols} size="small"/>
             </Modal>
         </>
 
     )
 }
+
 function Statistics() {
-    const [sellingStats, setSellingStats] = React.useState([])
-    const [customerStats, setCustomerStats] = React.useState([])
-    const [agentStats, setAgentStats] = React.useState([])
-    fetch('http://localhost:5000/api/get_selling')
-        .then((resp) => resp.json())
-        .then(data => {
-            if (JSON.stringify(sellingStats) !== JSON.stringify(data.data)) {
-                setSellingStats(data.data);
+    function SellingStatics() {
+        function SellingQuery() {
+            const [selling, setSelling] = React.useState(null)
+            if (!selling) {
+                fetch('http://localhost:5000/api/get_selling_by_date', {
+                    mode: 'cors',
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({date: moment()})
+                }).then(res => {
+                    return res.json()
+                }).then(result => {
+                    if (result.status === 'success') {
+                        setSelling(result.data)
+
+                    }
+                    if (result.status === 'failed') {
+                        message.error("Error getting passengers.\n" + result.msg)
+                    }
+                });
             }
-        });
-    fetch('http://localhost:5000/api/get_top_customer')
-        .then((resp) => resp.json())
-        .then(data => {
-            if (JSON.stringify(customerStats) !== JSON.stringify(data.data)) {
-                setCustomerStats(data.data);
-                console.log(data.data)
-            }
-        });
-    fetch('http://localhost:5000/api/get_top_agents')
-        .then((resp) => resp.json())
-        .then(data => {
-            if (JSON.stringify(agentStats) !== JSON.stringify(data.data)) {
-                setAgentStats(data.data);
-            }
-        });
+            return (
+                <Card bordered={false}>
+                    <Row>
+                        <Col span={8}>
+                            <Statistic
+                                title="Selling"
+                                value={selling}
+                                precision={2}
+                                suffix="￥"
+                            />
+                        </Col>
+                        <Col span={6} align={'end'}>
+                            Start from:&nbsp;
+                        </Col>
+                        <Col span={10} align={'end'}>
+                            <DatePicker style={{transform: 'translateY(-5px)'}} defaultValue={moment()}
+                                        onChange={date => {
+                                            fetch('http://localhost:5000/api/get_selling_by_date', {
+                                                mode: 'cors',
+                                                method: 'POST',
+                                                headers: {
+                                                    'Content-Type': 'application/json',
+                                                },
+                                                credentials: 'include',
+                                                body: JSON.stringify({date: date})
+                                            }).then(res => {
+                                                return res.json()
+                                            }).then(result => {
+                                                if (result.status === 'success') {
+                                                    setSelling(result.data)
 
-    const chartOptions = {
-        chart: {
-            type: 'area',
-            zoomType: 'x',
-            panning: true,
-            panKey: 'shift'
-        },
-        xAxis: {
-            categories: sellingStats.map(d => d.month)
-        },
-
-        boost: {
-            useGPUTranslations: true
-        },
-
-        title: {
-            text: ''
-        },
-
-        subtitle: {
-            text: ''
-        },
-
-        tooltip: {
-            valueDecimals: 2
-        },
-
-        series: [{
-            name: '',
-            data: sellingStats.map(d => d.selling)
-        }],
-        credits: {
-            enabled: false
-        },
-        legend: {
-            enabled: false
+                                                }
+                                                if (result.status === 'failed') {
+                                                    message.error("Error getting passengers.\n" + result.msg)
+                                                }
+                                            });
+                                        }}/>
+                        </Col>
+                    </Row>
+                </Card>
+            )
         }
 
+        const [selling, setSelling] = React.useState(null)
+        if (!selling) {
+            fetch('http://localhost:5000/api/get_selling_statistics')
+                .then((resp) => resp.json())
+                .then(data => {
+                    setSelling(data.data);
+                });
+        }
+
+        return (
+            <Row gutter={16}>
+                <Col span={6}>
+                    <Card bordered={false}>
+                        <Statistic
+                            title="Total selling"
+                            precision={2}
+                            suffix="￥"
+                            value={selling !== null ? selling.total : null}
+                        />
+                    </Card>
+                </Col>
+                <Col span={6}>
+                    <Card bordered={false}>
+                        <Statistic
+                            title="Last year selling"
+                            precision={2}
+                            suffix="￥"
+                            value={selling !== null ? selling.year : null}
+                        />
+                    </Card>
+                </Col>
+                <Col span={6}>
+                    <Card bordered={false}>
+                        <Statistic
+                            title="Last month selling"
+                            precision={2}
+                            suffix="￥"
+                            value={selling !== null ? selling.month : null}
+                        />
+                    </Card>
+                </Col>
+                <Col span={6}>
+                    <SellingQuery/>
+                </Col>
+            </Row>
+        )
     }
-    const customerCols = [{
-        title: 'Name',
-        dataIndex: 'name',
-        key: 'name',
-        render: (text, record) => <Passenger name={text} email={record.email}/>
+
+    function CustomerTable() {
+        const [customerStats, setCustomerStats] = React.useState([])
+        const customerCols = [{
+            title: 'Name',
+            dataIndex: 'name',
+            key: 'name',
+            render: (text, record) => <Passenger name={text} email={record.email}/>
         },
-        {
-            title: 'Email',
-            dataIndex: 'email',
-            key: 'email'
+            {
+                title: 'Email',
+                dataIndex: 'email',
+                key: 'email'
+            },
+            {
+                title: 'Spending',
+                dataIndex: 'spending',
+                key: 'spending'
+            },
+            {
+                title: 'Orders',
+                dataIndex: 'orders',
+                key: 'orders',
+                render: (text, record) => <StatisticsViewOrders record={record}/>
+            }
+        ]
+        fetch('http://localhost:5000/api/get_top_customer')
+            .then((resp) => resp.json())
+            .then(data => {
+                if (JSON.stringify(customerStats) !== JSON.stringify(data.data)) {
+                    setCustomerStats(data.data);
+                }
+            });
+        return (<Card title={'Customers'}>
+            &nbsp;Past year
+            <Table dataSource={customerStats} columns={customerCols} size="small"/>
+        </Card>)
+    }
+
+    function AgentTable() {
+        const [agentStats, setAgentStats] = React.useState([])
+        const agentCols = [{
+            title: 'Name',
+            dataIndex: 'name',
+            key: 'name',
         },
-        {
-            title: 'Spending',
-            dataIndex: 'spending',
-            key: 'spending'
-        },
-        {
-            title: 'Orders',
-            dataIndex: 'orders',
-            key: 'orders',
-            render: (text, record) => <StatisticsViewOrders record={record} />
+            {
+                title: 'Email',
+                dataIndex: 'email',
+                key: 'email'
+            },
+            {
+                title: 'Tickets',
+                dataIndex: 'tickets',
+                key: 'tickets'
+            },
+            {
+                title: 'Selling',
+                dataIndex: 'selling',
+                key: 'selling'
+            },
+        ]
+        fetch('http://localhost:5000/api/get_top_agents')
+            .then((resp) => resp.json())
+            .then(data => {
+                if (JSON.stringify(agentStats) !== JSON.stringify(data.data)) {
+                    setAgentStats(data.data);
+                }
+            });
+        return (
+            <Card title={'Agents'}>
+                &nbsp;Past year, by tickets
+                <Table dataSource={agentStats.year_tickets} columns={agentCols} size="small"/>
+                &nbsp;Past month, by tickets
+                <Table dataSource={agentStats.month_tickets} columns={agentCols} size="small"/>
+                &nbsp;Past year, by commission
+                <Table dataSource={agentStats.year_commission} columns={agentCols} size="small"/>
+            </Card>
+        )
+    }
+
+    function SellingGraph() {
+        const [sellingStats, setSellingStats] = React.useState([])
+        fetch('http://localhost:5000/api/get_selling')
+            .then((resp) => resp.json())
+            .then(data => {
+                if (JSON.stringify(sellingStats) !== JSON.stringify(data.data)) {
+                    setSellingStats(data.data);
+                }
+            });
+        const chartOptions = {
+            chart: {
+                type: 'column',
+                zoomType: 'x',
+                panning: true,
+                panKey: 'shift'
+            },
+            xAxis: {
+                categories: sellingStats.map(d => d.month)
+            },
+            yAxis: {
+                title: {text: ''}
+            },
+
+            boost: {
+                useGPUTranslations: true
+            },
+
+            title: {
+                text: ''
+            },
+
+            subtitle: {
+                text: ''
+            },
+
+            tooltip: {
+                valueDecimals: 2
+            },
+
+            series: [{
+                name: '',
+                data: sellingStats.map(d => d.selling)
+            }],
+            credits: {
+                enabled: false
+            },
+            legend: {
+                enabled: false
+            }
+
         }
-    ]
-    const agentCols = [{
-        title: 'Name',
-        dataIndex: 'name',
-        key: 'name',
-    },
-        {
-            title: 'Email',
-            dataIndex: 'email',
-            key: 'email'
-        },
-        {
-            title: 'Selling',
-            dataIndex: 'selling',
-            key: 'selling'
-        },
-    ]
-    return (<Content style={{padding: '50px 50px', minHeight: '90vh'}}>
+        return (
+            <Card title={'Selling in the Past Year'}>
+                <HighchartsReact highcharts={Highcharts} options={chartOptions}/>
+            </Card>
+        )
+    }
+
+    function PieChart() {
+        const [sourceData, setSourceData] = React.useState({data: null, loaded: false})
+        if (!sourceData.loaded) {
+            fetch('http://localhost:5000/api/get_source')
+                .then((resp) => resp.json())
+                .then(data => {
+                    setSourceData({data: data.data, loaded: true});
+                });
+        }
+        return (<Card title={'Revenue Source'}>
+            <Row>
+                <Col span={12}>
+                    Last Year
+                    {sourceData.data === null ? <Empty/> : <HighchartsReact hicharts={Highcharts} options={{
+                        chart: {
+                            plotBackgroundColor: null,
+                            plotBorderWidth: null,
+                            plotShadow: false,
+                            type: 'pie',
+                            height: 300
+                        },
+                        title: {
+                            text: ''
+                        },
+                        tooltip: {
+                            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                        },
+                        accessibility: {
+                            point: {
+                                valueSuffix: '%'
+                            }
+                        },
+                        plotOptions: {
+                            pie: {
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                dataLabels: {
+                                    enabled: false
+                                },
+                                showInLegend: true
+                            }
+                        },
+                        series: [{
+                            name: 'Source',
+                            colorByPoint: true,
+                            data: [{
+                                name: 'Direct Sell',
+                                y: sourceData.data.direct_year,
+                            }, {
+                                name: 'Indirect Sell',
+                                y: sourceData.data.indirect_year
+                            }]
+                        }],
+                        credits: {
+                            enabled: false
+                        }
+                    }}/>}
+                </Col>
+                <Col span={12}>
+                    Last Month
+                    {sourceData.data === null ? <Empty/> : <HighchartsReact hicharts={Highcharts} options={{
+                        chart: {
+                            plotBackgroundColor: null,
+                            plotBorderWidth: null,
+                            plotShadow: false,
+                            type: 'pie',
+                            height: 300
+                        },
+                        title: {
+                            text: ''
+                        },
+                        tooltip: {
+                            pointFormat: '{series.name}: <b>{point.percentage:.1f}%</b>'
+                        },
+                        accessibility: {
+                            point: {
+                                valueSuffix: '%'
+                            }
+                        },
+                        plotOptions: {
+                            pie: {
+                                allowPointSelect: true,
+                                cursor: 'pointer',
+                                dataLabels: {
+                                    enabled: false
+                                },
+                                showInLegend: true
+                            }
+                        },
+                        series: [{
+                            name: 'Source',
+                            colorByPoint: true,
+                            data: [{
+                                name: 'Direct Sell',
+                                y: sourceData.data.direct_month,
+                            }, {
+                                name: 'Indirect Sell',
+                                y: sourceData.data.indirect_month
+                            }]
+                        }],
+                        credits: {
+                            enabled: false
+                        }
+                    }}/>}
+                </Col>
+            </Row>
+        </Card>)
+    }
+
+    function Destination() {
+        const [sourceData, setSourceData] = React.useState({data: null, loaded: false})
+        if (!sourceData.loaded) {
+            fetch('http://localhost:5000/api/get_destination')
+                .then((resp) => resp.json())
+                .then(data => {
+                    setSourceData({data: data.data, loaded: true});
+                });
+        }
+        return (<Card title={'Top 3 destination'}>
+            {sourceData.data === null ? <Empty/> : <>
+                <p>Last 3 Months</p>
+                <Row gutter={16}>
+                    <Col span={8} align={'center'}  style={{transform:'translateY(5px)'}}>
+                        <Statistic title="Top 2" value={sourceData.data.threeMonth[1]} prefix={<FireOutlined />} valueStyle={{ color: '#548bfb' }}/>
+                    </Col>
+                    <Col span={8} align={'center'}>
+                        <Statistic title="Top 1" value={sourceData.data.threeMonth[0]} prefix={<FireOutlined />} valueStyle={{ color: '#cf1322' }}/>
+                    </Col>
+                    <Col span={8} align={'center'}  style={{transform:'translateY(5px)'}}>
+                        <Statistic title="Top 3" value={sourceData.data.threeMonth[2]} prefix={<FireOutlined />} valueStyle={{ color: '#548bfb' }}/>
+                    </Col>
+                </Row>
+                <br/>
+                <br/>
+                <p>Last Year</p>
+                <Row gutter={16}>
+                    <Col span={8} align={'center'}  style={{transform:'translateY(5px)'}}>
+                        <Statistic title="Top 2" value={sourceData.data.year[1]} prefix={<FireOutlined />} valueStyle={{ color: '#548bfb' }} />
+                    </Col>
+                    <Col span={8} align={'center'}>
+                        <Statistic title="Top 1" value={sourceData.data.year[0]} prefix={<FireOutlined />} valueStyle={{ color: '#cf1322' }}/>
+                    </Col>
+                    <Col span={8} align={'center'}  style={{transform:'translateY(5px)'}}>
+                        <Statistic title="Top 3" value={sourceData.data.year[2]} prefix={<FireOutlined />} valueStyle={{ color: '#548bfb' }} />
+                    </Col>
+                </Row>
+                <br/>
+            </>
+
+                }
+        </Card>)
+    }
+
+    return (
+        <Content style={{padding: '50px 50px', minHeight: '90vh'}}>
+            <SellingStatics/>
+            <br/>
             <Row gutter={16}>
                 <Col span={24}>
-                    <Card title={'Selling in the Past Year'}>
-                        <HighchartsReact highcharts={Highcharts} options={chartOptions}/>
-                    </Card>
+                    <SellingGraph/>
                 </Col>
             </Row>
             <br/>
             <Row gutter={16}>
                 <Col span={12}>
-                    <Card title={'Customers'}>
-                        <Table dataSource={customerStats} columns={customerCols} size="small"/>
-                    </Card>
+                    <CustomerTable/>
+                    <br/>
+                    <PieChart/>
+                    <br/>
+                    <Destination/>
                 </Col>
                 <Col span={12}>
-                    <Card title={'Agents'}>
-                        <Table dataSource={agentStats} columns={agentCols} size="small"/>
-                    </Card>
+                    <AgentTable/>
                 </Col>
             </Row>
-
         </Content>
     )
 }
 
-
 function Staff(props) {
-    const [mainMenu, setMainMenu] = React.useState('tickets')
+    const [mainMenu, setMainMenu] = React.useState('manage_flights')
 
     return (
         <React.Fragment>
