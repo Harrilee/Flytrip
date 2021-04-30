@@ -482,7 +482,7 @@ function LoginMenu(props){
                     <Input prefix={<IdcardOutlined />} placeholder={"Agent ID"} />
             </Form.Item> :<React.Fragment />}
     function Username(props){
-        return(props.role==='Staff')?
+        return(props.role==='Staff' || props.role==='Admin')?
                 <Form.Item name = {'username'} rules={[{ required: true, message: 'Please enter your username' }]}>
                     <Input prefix={<UserOutlined />} placeholder={"Username"} />
                 </Form.Item> :<React.Fragment />}
