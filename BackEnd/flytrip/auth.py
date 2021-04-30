@@ -2,7 +2,7 @@ import functools
 import re
 
 import pymysql
-from flask import (Blueprint, g, jsonify, redirect, request, session, url_for)
+from flask import (Blueprint, jsonify, redirect, request, session, url_for)
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .db import get_db
@@ -28,19 +28,19 @@ def login_required(view):
     return wrapped_view
 
 
-@bp.before_app_request
-def load_logged_in_user():
-    user_email = session.get('email')
-
-    if user_email is None:
-        g.user = None
-    else:
-        db = get_db()
-        with db.cursor() as cursor:
-            cursor.execute(
-                'SELECT * FROM customer WHERE email = %s LIMIT 1;', (user_email,)
-            )
-            g.user = cursor.fetchone()
+# @bp.before_app_request
+# def load_logged_in_user():
+#     user_email = session.get('email')
+#
+#     if user_email is None:
+#         g.user = None
+#     else:
+#         db = get_db()
+#         with db.cursor() as cursor:
+#             cursor.execute(
+#                 'SELECT * FROM customer WHERE email = %s LIMIT 1;', (user_email,)
+#             )
+#             g.user = cursor.fetchone()
 
 
 @bp.route('/register', methods=['POST'])
@@ -103,17 +103,23 @@ def register():
                 msg = 'Agent ID should be a number'
 
         if msg is None:
-            with db.cursor() as cursor:
-                cursor.execute(
-                    "INSERT INTO booking_agent(email, password, booking_agent_id) "
-                    " VALUES(%s, %s, %s)",
-                    (
-                        req['email'],
-                        generate_password_hash(req['password']),
-                        req['agent_ID']
+            try:
+                with db.cursor() as cursor:
+                    cursor.execute(
+                        "INSERT INTO booking_agent(email, password, booking_agent_id) "
+                        " VALUES(%s, %s, %s)",
+                        (
+                            req['email'],
+                            generate_password_hash(req['password']),
+                            req['agent_ID']
+                        )
                     )
-                )
-            db.commit()
+                db.commit()
+            except pymysql.err.IntegrityError as err:
+                return jsonify({
+                    'status': 'failed',
+                    'msg': err.args[1]
+                })
 
             return jsonify({'status': 'success'})
 
@@ -280,16 +286,31 @@ def login():
         })
     elif user_type == 'admin':
         user = None
-        if password == 'a':
+        with db.cursor() as cursor:
+            cursor.execute(
+                'SELECT * FROM admin WHERE admin_id = %s LIMIT 1;', (req['username'],)
+            )
+            user = cursor.fetchone()
+
+        if user is None:
+            msg = 'Incorrect admin ID.'
+        elif not check_password_hash(user['password'], password):
+            msg = 'Incorrect password.'
+
+        if msg is None:
             session.clear()
             session['user_type'] = user_type
+            print('login function session: ', session)
             return jsonify({
                 'status': 'success',
-                'user_type': 'admin',
+                'user_type': user_type,
+                'username': req['username']
             })
-
-    return jsonify({'status': 'failed',
-                    'msg': 'Unknown role.'})
+        return jsonify({
+            'status': 'failed',
+            'user_type': user_type,
+            'msg': msg
+        })
 
 
 @bp.route('/logout', methods=['POST'])
