@@ -816,16 +816,18 @@ function Manage() {
                                 </Col>
                             </Row>
                             <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item label={'Departure date'} name={'departure_date'} rules={[
+                                <Col span={16}>
+                                    <Form.Item label={'Airplane ID'} name={'airplane_id'} rules={[
                                         {
                                             required: true,
-                                            message: 'Please enter the date',
+                                            message: 'Please enter the airplane ID',
                                         },
                                     ]}>
-                                        <DatePicker/>
+                                        <Input placeholder={'Airplane ID'}/>
                                     </Form.Item>
                                 </Col>
+                            </Row>
+                            <Row gutter={16}>
                                 <Col span={12}>
                                     <Form.Item label={'Departure time'} name={'departure_time'} rules={[
                                         {
@@ -833,19 +835,7 @@ function Manage() {
                                             message: 'Please enter the time',
                                         },
                                     ]}>
-                                        <TimePicker/>
-                                    </Form.Item>
-                                </Col>
-                            </Row>
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <Form.Item label={'Arrival date'} name={'arrival_date'} rules={[
-                                        {
-                                            required: true,
-                                            message: 'Please enter the date',
-                                        },
-                                    ]}>
-                                        <DatePicker/>
+                                        <DatePicker showTime={true}/>
                                     </Form.Item>
                                 </Col>
                                 <Col span={12}>
@@ -855,7 +845,7 @@ function Manage() {
                                             message: 'Please enter the time',
                                         },
                                     ]}>
-                                        <TimePicker/>
+                                        <DatePicker showTime={true}/>
                                     </Form.Item>
                                 </Col>
                             </Row>
