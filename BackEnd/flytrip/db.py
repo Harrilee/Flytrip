@@ -47,6 +47,19 @@ def init_db():
         db.commit()
 
 
+def clear_db():
+    """
+    Clear database
+    :return:
+    """
+    db = get_db()
+    stmts = parse_sql('schema.sql')
+    with db.cursor() as cursor:
+        for stmt in stmts:
+            cursor.execute(stmt)
+        db.commit()
+
+
 def parse_sql(filename):
     """
     Parse multiline SQL statements into a list of strings

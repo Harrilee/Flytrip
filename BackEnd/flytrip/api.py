@@ -4,6 +4,7 @@ from flask import (
 )
 import time
 import random
+from .db import init_db, clear_db
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -70,12 +71,20 @@ def get_passenger_info():
 
 @bp.route('/admin/import_data', methods=['POST'])
 def import_data():
-    return jsonify({'status': 'success'})
+    try:
+        init_db()
+        return jsonify({'status': 'success'})
+    except:
+        return jsonify({'status': 'failed'})
 
 
 @bp.route('/admin/clear', methods=['POST'])
 def clear():
-    return jsonify({'status': 'success'})
+    try:
+        clear_db()
+        return jsonify({'status': 'success'})
+    except:
+        return jsonify({'status': 'failed'})
 
 
 @bp.route('/new_flight', methods=['POST'])
