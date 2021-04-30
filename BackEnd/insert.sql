@@ -27,25 +27,25 @@ VALUES ('user1@test.com', 'user1', 'password1', 'building1', 'street1', 'Shangha
 INSERT INTO booking_agent (email, password, booking_agent_id)
 VALUES ('agent1@test.com', 'password1', 1234);
 
-INSERT INTO airplane (airplane_id, airline_name, seats)
-VALUES (1, 'China Eastern', 100),
-       (1, 'airline a', 150);
+INSERT INTO airplane (airplane_id, airline_name, FCseats, BCseats, ECseats)
+VALUES (1, 'China Eastern', 10, 20, 30),
+       (1, 'airline a', 10, 20, 30);
 
 INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, airline_name)
 VALUES ('staff1', 'password1', 'john', 'smith', '2000-1-1', 'China Eastern');
 
-INSERT INTO flight (airline_name, airplane_id, flight_num, departure_time, arrival_time, price, status,
-                    departure_airport, arrival_airport)
-VALUES ('China Eastern', 1, 1, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 'upcoming', 'PVG', 'JFK'),
-       ('China Eastern', 1, 2, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 'delayed', 'PVG', 'JFK'),
-       ('China Eastern', 1, 3, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 'canceled', 'PVG', 'JFK'),
-       ('China Eastern', 1, 4, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 'in-progress', 'PVG', 'JFK');
+INSERT INTO flight (airline_name, airplane_id, flight_num, departure_time, arrival_time, FCprice, BCprice, ECprice, status,
+                    departure_airport, arrival_airport, date)
+VALUES ('China Eastern', 1, 1, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 10, 1, 'upcoming', 'PVG', 'JFK', '2021-1-1'),
+       ('China Eastern', 1, 2, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 10, 1, 'delayed', 'PVG', 'JFK', '2021-1-1'),
+       ('China Eastern', 1, 3, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 10, 1, 'canceled', 'PVG', 'JFK', '2021-1-1'),
+       ('China Eastern', 1, 4, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 10, 1, 'in-progress', 'PVG', 'JFK', '2021-1-1');
 
-INSERT INTO ticket (airline_name, flight_num, ticket_id)
-VALUES ('China Eastern', 1, 1),
-       ('China Eastern', 1, 2),
-       ('China Eastern', 1, 3),
-       ('China Eastern', 1, 4);
+INSERT INTO ticket (airline_name, flight_num, ticket_id, class)
+VALUES ('China Eastern', 1, 1, 'BC'),
+       ('China Eastern', 1, 2, 'BC'),
+       ('China Eastern', 1, 3, 'EC'),
+       ('China Eastern', 1, 4, 'FC');
 
 INSERT INTO purchases (customer_email, ticket_id, booking_agent_id, purchase_date)
 VALUES ('user1@test.com', 1, NULL, '2021-1-1'),

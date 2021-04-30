@@ -37,7 +37,9 @@ CREATE TABLE `airplane`
 (
     `airline_name` VARCHAR(50) NOT NULL,
     `airplane_id`  INT(11)     NOT NULL,
-    `seats`        INT(11)     NOT NULL,
+    `ECseats`      INT(11)     NOT NULL,
+    `FCseats`      INT(11)     NOT NULL,
+    `BCseats`      INT(11)     NOT NULL,
     PRIMARY KEY (`airline_name`, `airplane_id`),
     FOREIGN KEY (`airline_name`) REFERENCES `airline` (`airline_name`)
 ) ENGINE = InnoDB
@@ -110,10 +112,13 @@ CREATE TABLE `flight`
     `departure_time`    DATETIME       NOT NULL,
     `arrival_airport`   VARCHAR(50)    NOT NULL,
     `arrival_time`      DATETIME       NOT NULL,
-    `price`             DECIMAL(10, 0) NOT NULL,
+    `ECprice`           DECIMAL(10, 0) NOT NULL,
+    `BCprice`           DECIMAL(10, 0) NOT NULL,
+    `FCprice`           DECIMAL(10, 0) NOT NULL,
     `status`            VARCHAR(50)    NOT NULL,
     `airplane_id`       INT(11)        NOT NULL,
-    PRIMARY KEY (`airline_name`, `flight_num`),
+    `date`              DATE           NOT NULL,
+    PRIMARY KEY (`airline_name`, `flight_num`, `date`),
     FOREIGN KEY (`airline_name`, `airplane_id`) REFERENCES `airplane` (`airline_name`, `airplane_id`),
     FOREIGN KEY (`departure_airport`) REFERENCES `airport` (`airport_name`),
     FOREIGN KEY (`arrival_airport`) REFERENCES `airport` (`airport_name`)
@@ -132,6 +137,7 @@ CREATE TABLE `ticket`
     `ticket_id`    INT(11)     NOT NULL,
     `airline_name` VARCHAR(50) NOT NULL,
     `flight_num`   INT(11)     NOT NULL,
+    `class`        VARCHAR(50) NOT NULL,
     PRIMARY KEY (`ticket_id`),
     FOREIGN KEY (`airline_name`, `flight_num`) REFERENCES `flight` (`airline_name`, `flight_num`)
 ) ENGINE = InnoDB
