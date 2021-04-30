@@ -17,7 +17,7 @@ CREATE TABLE `airline`
 CREATE TABLE `airline_staff`
 (
     `username`      VARCHAR(50) NOT NULL,
-    `password`      VARCHAR(50) NOT NULL,
+    `password`      VARCHAR(100) NOT NULL,
     `first_name`    VARCHAR(50) NOT NULL,
     `last_name`     VARCHAR(50) NOT NULL,
     `date_of_birth` DATE        NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE `airport`
 CREATE TABLE `booking_agent`
 (
     `email`            VARCHAR(50) NOT NULL,
-    `password`         VARCHAR(50) NOT NULL,
+    `password`         VARCHAR(100) NOT NULL,
     `booking_agent_id` INT(11)     NOT NULL,
     PRIMARY KEY (`email`)
 ) ENGINE = InnoDB
@@ -82,7 +82,7 @@ CREATE TABLE `customer`
 (
     `email`               VARCHAR(50) NOT NULL,
     `name`                VARCHAR(50) NOT NULL,
-    `password`            VARCHAR(50) NOT NULL,
+    `password`            VARCHAR(100) NOT NULL,
     `building_number`     VARCHAR(30) NOT NULL,
     `street`              VARCHAR(30) NOT NULL,
     `city`                VARCHAR(30) NOT NULL,
@@ -165,7 +165,7 @@ CREATE TABLE `purchases`
 CREATE TABLE `admin`
 (
     `admin_id` INT(11)     NOT NULL,
-    `password` VARCHAR(50) NOT NULL,
+    `password` VARCHAR(100) NOT NULL,
     PRIMARY KEY (`admin_id`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
