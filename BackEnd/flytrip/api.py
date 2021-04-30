@@ -90,8 +90,31 @@ def clear():
 def addNewFlight():
     req = request.json
     print(req)
-    return jsonify({'status': 'success',
-                    'msg': ''})
+    db = get_db()
+    flight_num = req['flight_num']
+    departure_airport = req['depart_airport']
+    arrival_airport = req['arrive_airport']
+    departure_time = req['departure_time'][:19]
+    arrival_time = req['arrival_time'][:19]
+    airplane_id = req['airplane_id']
+    EC = req['ECprice']
+    FC = req['FCprice']
+    BC = req['BCprice']
+    try:
+        with db.cursor() as cursor:
+            cursor.execute("SELECT * FROM airline_staff WHERE username = %s;", (session['username'],))
+            airline = cursor.fetchone()['airline_name']
+            cursor.execute(
+                "INSERT INTO flight(airline_name, flight_num, departure_airport, departure_time, arrival_airport"
+                ", arrival_time, ECprice, BCprice, FCprice, status, airplane_id, date) "
+                "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
+                (airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time, EC, BC, FC,
+                 'upcoming', airplane_id, departure_time[:10]))
+        return jsonify({'status': 'success',
+                        'msg': ''})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
 
 
 @bp.route('/new_plane', methods=['POST'])
@@ -110,7 +133,8 @@ def addNewPlane():
             cursor.execute("SELECT * FROM airline_staff WHERE username = %s;", (session['username'],))
             airline = cursor.fetchone()['airline_name']
             cursor.execute(
-                "INSERT INTO airplane(airline_name, airplane_id, ECseats, FCseats, BCseats) VALUES (%s, %s, %s, %s, %s);",
+                "INSERT INTO airplane(airline_name, airplane_id, ECseats, FCseats, BCseats) "
+                "VALUES (%s, %s, %s, %s, %s);",
                 (airline, ID, EC, FC, BC))
             db.commit()
             return jsonify({'status': 'success',
