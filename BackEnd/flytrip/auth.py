@@ -137,7 +137,8 @@ def register():
             try:
                 with db.cursor() as cursor:
                     cursor.execute(
-                        "INSERT INTO staff(username, password, first_name, last_name, date_of_birth, airline_name) "
+                        "INSERT INTO "
+                        "airline_staff(username, password, first_name, last_name, date_of_birth, airline_name) "
                         " VALUES(%s, %s, %s, %s, %s, %s)",
                         (
                             req['username'],
@@ -260,7 +261,7 @@ def login():
         user = None
         with db.cursor() as cursor:
             cursor.execute(
-                'SELECT * FROM staff WHERE username = %s LIMIT 1;', (req['username'],)
+                'SELECT * FROM airline_staff WHERE username = %s LIMIT 1;', (req['username'],)
             )
             user = cursor.fetchone()
 
@@ -288,7 +289,7 @@ def login():
         user = None
         with db.cursor() as cursor:
             cursor.execute(
-                'SELECT * FROM admin WHERE admin_id = %s LIMIT 1;', (req['username'],)
+                'SELECT * FROM admin WHERE admin_name = %s LIMIT 1;', (req['username'],)
             )
             user = cursor.fetchone()
 
