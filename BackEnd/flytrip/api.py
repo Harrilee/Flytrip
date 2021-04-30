@@ -1,11 +1,8 @@
 import datetime
 import random
 
-from flask import (
-    Blueprint, request, jsonify, session
-)
-
 from . import testData
+from .auth import *
 from .db import *
 
 bp = Blueprint('api', __name__, url_prefix='/api')
@@ -98,19 +95,48 @@ def addNewFlight():
 
 
 @bp.route('/new_plane', methods=['POST'])
+@staff_login_required
 def addNewPlane():
     req = request.json
+    db = get_db()
     print(req)
-    return jsonify({'status': 'success',
-                    'msg': ''})
+    ID = req['id']
+    EC = req['EC']
+    FC = req['FC']
+    BC = req['BC']
+
+    try:
+        with db.cursor() as cursor:
+            cursor.execute("SELECT * FROM airline_staff WHERE username = %s;", (session['username'],))
+            airline = cursor.fetchone()['airline_name']
+            cursor.execute(
+                "INSERT INTO airplane(airline_name, airplane_id, ECseats, FCseats, BCseats) VALUES (%s, %s, %s, %s, %s);",
+                (airline, ID, EC, FC, BC))
+            db.commit()
+            return jsonify({'status': 'success',
+                            'msg': 'successfully added'})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
 
 
 @bp.route('/new_airport', methods=['POST'])
 def addNewAirport():
     req = request.json
-    print(req)
-    return jsonify({'status': 'success',
-                    'msg': ''})
+    db = get_db()
+    name = req['name']
+    city = req['city']
+    print(name)
+    print(city)
+    try:
+        with db.cursor() as cursor:
+            cursor.execute("INSERT INTO airport(airport_name, airport_city) VALUES (%s, %s);", (name, city,))
+            db.commit()
+            return jsonify({'status': 'success',
+                            'msg': 'successfully added'})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
 
 
 @bp.route('/get_selling', methods=['GET'])  # for bar chart
@@ -218,8 +244,8 @@ def search_flight():
     print(request.args)
     if request.args.get('action') == 'getTickets':  # Guest（非登录）查看所有票
         date = request.args.get('date')
-        date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000)-28800).date()
-        stat = "SELECT * FROM ticket NATURAL JOIN flight NATURAL JOIN airport NATURAL JOIN airplane WHERE date = %s"
+        date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000) - 28800).date()
+        stat = "SELECT * FROM ticket NATURAL JOIN flight NATURAL JOIN airport NATURAL JOIN airplane WHERE status = 'upcoming' AND date = %s"
         print(date)
         fr = request.args.get('from')
         to = request.args.get('to')

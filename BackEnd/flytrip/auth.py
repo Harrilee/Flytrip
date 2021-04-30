@@ -10,7 +10,7 @@ from .db import get_db
 bp = Blueprint('auth', __name__, url_prefix='/auth')
 
 
-def login_required(view):
+def admin_login_required(view):
     """
     Define the login_required decorator
     :param view: function to wrap
@@ -19,9 +19,39 @@ def login_required(view):
 
     @functools.wraps(view)
     def wrapped_view(**kwargs):
-        print('login_required')
-        print('session: ', session)
-        if session.get('email') is None:
+        if session.get('user_type') != 'admin':
+            return redirect(url_for('auth.login'))
+        return view(**kwargs)
+
+    return wrapped_view
+
+
+def staff_login_required(view):
+    """
+    Define the login_required decorator
+    :param view: function to wrap
+    :return: if logged in, return the original function, otherwise redirect to login
+    """
+
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if session.get('user_type') != 'staff':
+            return redirect(url_for('auth.login'))
+        return view(**kwargs)
+
+    return wrapped_view
+
+
+def customer_login_required(view):
+    """
+    Define the login_required decorator
+    :param view: function to wrap
+    :return: if logged in, return the original function, otherwise redirect to login
+    """
+
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if session.get('user_type') != 'customer':
             return redirect(url_for('auth.login'))
         return view(**kwargs)
 
