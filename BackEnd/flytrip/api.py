@@ -50,11 +50,29 @@ def statusStaffChange():
 def get_passengers():
     req = request.json
     print(req)
-    return jsonify({'status': 'success',
-                    'msg': '',
-                    'data': testData.passengers})
-    return jsonify({'status': 'failed',
-                    'msg': 'just failed'})
+    airline = req['airline']
+    date = req['date']
+    flight_num = req['flight_num']
+    db = get_db()
+    try:
+        data = None
+        with db.cursor() as cursor:
+            cursor.execute("SELECT * FROM customer JOIN purchases p ON customer.email = p.customer_email "
+                           "JOIN ticket t ON p.ticket_id = t.ticket_id"
+                           " JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num"
+                           " WHERE f.flight_num = %s and f.airline_name = %s and f.date = %s;",
+                           (flight_num, airline, date,))
+            data = cursor.fetchall()
+
+        result = {'FC': [], 'EC': [], 'BC': []}
+        for i in data:
+            result[i['class']].append({'name': i['name'], 'email': i['email']})
+        return jsonify({'status': 'success',
+                        'msg': '',
+                        'data': result})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
 
 
 @bp.route('/get_passenger_info', methods=['POST'])
@@ -243,10 +261,36 @@ def get_source():
 
 @bp.route('/get_destination', methods=['GET'])
 def get_destination():
+    db = get_db()
+    with db.cursor() as cursor:
+        cursor.execute("SELECT COUNT(*) count,b.airport_city "
+                       " FROM (flight JOIN airport a ON flight.arrival_airport = a.airport_name) "
+                       "JOIN airport b ON departure_airport = b.airport_name "
+                       "WHERE departure_time > DATE_SUB(NOW(), INTERVAL 1 Year) "
+                       "GROUP BY b.airport_city "
+                       "ORDER BY count DESC "
+                       "LIMIT 3; ")
+        result = cursor.fetchall()
+        year = []
+        for i in result:
+            year.append(i['airport_city'])
+
+        cursor.execute("SELECT COUNT(*) count,b.airport_city "
+                       " FROM (flight JOIN airport a ON flight.arrival_airport = a.airport_name) "
+                       "JOIN airport b ON departure_airport = b.airport_name "
+                       "WHERE departure_time > DATE_SUB(NOW(), INTERVAL 3 MONTH) "
+                       "GROUP BY b.airport_city "
+                       "ORDER BY count DESC "
+                       "LIMIT 3; ")
+        result = cursor.fetchall()
+        month = []
+        for i in result:
+            month.append(i['airport_city'])
+
     return jsonify({'status': 'success',
                     'data': {
-                        'threeMonth': ['Shanghai', 'Chengdu', 'Hangzhou'],
-                        'year': ['Shanghai', 'Hangzhou', 'Chengdu'],
+                        'threeMonth': month,
+                        'year': year,
                     },
                     'msg': ''})
 
