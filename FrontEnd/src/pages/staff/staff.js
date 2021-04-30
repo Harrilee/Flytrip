@@ -867,7 +867,7 @@ function Manage() {
                                             message: 'Please fill in this field',
                                         },
                                     ]}>
-                                        <Input placeholder={'Flight number'}/>
+                                        <Input placeholder={'Departure airport'}/>
                                     </Form.Item>
                                 </Col>
                                 <Col span={12}>
@@ -877,7 +877,7 @@ function Manage() {
                                             message: 'Please fill in this field',
                                         },
                                     ]}>
-                                        <Input placeholder={'Flight number'}/>
+                                        <Input placeholder={'Arrival airport'}/>
                                     </Form.Item>
                                 </Col>
                             </Row>
@@ -889,7 +889,7 @@ function Manage() {
                                             message: 'Please fill in this field',
                                         },
                                     ]}>
-                                        <Input placeholder={'Flight number'}/>
+                                        <Input placeholder={'Economy clsss price'}/>
                                     </Form.Item>
                                 </Col>
                                 <Col span={8}>
@@ -899,7 +899,7 @@ function Manage() {
                                             message: 'Please fill in this field',
                                         },
                                     ]}>
-                                        <Input placeholder={'Flight number'}/>
+                                        <Input placeholder={'Business class price'}/>
                                     </Form.Item>
                                 </Col>
                                 <Col span={8}>
@@ -909,7 +909,7 @@ function Manage() {
                                             message: 'Please fill in this field',
                                         },
                                     ]}>
-                                        <Input placeholder={'Flight number'}/>
+                                        <Input placeholder={'First class price'}/>
                                     </Form.Item>
                                 </Col>
                             </Row>
