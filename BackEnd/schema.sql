@@ -89,7 +89,7 @@ CREATE TABLE `customer`
     `street`              VARCHAR(30)  NOT NULL,
     `city`                VARCHAR(30)  NOT NULL,
     `state`               VARCHAR(30)  NOT NULL,
-    `phone_number`        INT(11)      NOT NULL,
+    `phone_number`        VARCHAR(30)  NOT NULL,
     `passport_number`     VARCHAR(30)  NOT NULL,
     `passport_expiration` DATE         NOT NULL,
     `passport_country`    VARCHAR(50)  NOT NULL,

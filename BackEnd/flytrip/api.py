@@ -206,8 +206,10 @@ def get_cities():
     with db.cursor() as cursor:
         cursor.execute("SELECT DISTINCT airport_city FROM airport;")
         result = cursor.fetchall()
-        print(result)
-        return result
+        cities = []
+        for i in result:
+            cities.append(i['airport_city'])
+        return cities
 
 
 @bp.route('/search', methods=['GET'])
@@ -216,19 +218,65 @@ def search_flight():
     print(request.args)
     if request.args.get('action') == 'getTickets':  # Guest（非登录）查看所有票
         date = request.args.get('date')
-        date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000)).date()
+        date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000)-28800).date()
+        stat = "SELECT * FROM ticket NATURAL JOIN flight NATURAL JOIN airport NATURAL JOIN airplane WHERE date = %s"
         print(date)
         fr = request.args.get('from')
         to = request.args.get('to')
         db = get_db()
         cities = get_cities()
-        result = None
+        if fr in cities:
+            stat += " AND departure_airport IN (SELECT airport_name FROM airport WHERE airport_city = %s)"
+        else:
+            stat += " AND departure_airport = %s"
+
+        if to in cities:
+            stat += " AND arrival_airport IN (SELECT airport_name FROM airport WHERE airport_city = %s)"
+        else:
+            stat += " AND arrival_airport = %s"
+
         with db.cursor() as cursor:
-            cursor.execute("SELECT * FROM ticket NATURAL JOIN flight WHERE (departure_time = %s "
-                           "OR arrival_time = %s) AND departure_airport LIKE %s AND arrival_airport LIKE %s",
-                           (date, date, fr, to,))
+            cursor.execute(stat, (date, fr, to,))
             result = cursor.fetchall()
         print(result)
+        ret = []
+        for index, item in enumerate(result):
+            item['key'] = index
+            item['airline'] = item['airline_name']
+            item['depart_city'] = 'Shanghai'
+            item['arrive_city'] = 'Beijing'
+            item['depart_time'] = item['departure_time'].strftime("%H:%M")
+            item['arrive_time'] = item['arrival_time'].strftime("%H:%M")
+            item['date'] = date
+            item['ECprice'] = int(item['ECprice'])
+            item['BCprice'] = int(item['BCprice'])
+            item['FCprice'] = int(item['FCprice'])
+            remain = {}
+
+            with db.cursor() as cursor:
+                cursor.execute(
+                    "SELECT COUNT(ticket_id) count, class FROM ticket WHERE airline_name = %s AND flight_num = %s GROUP BY class;",
+                    (item['airline_name'], item['flight_num'],))
+                remaining = cursor.fetchall()
+            print(remaining)
+            print('a')
+            for i in remaining:
+                if i['class'] == 'BC':
+                    remain['BC'] = i['count']
+                if i['class'] == 'EC':
+                    remain['EC'] = i['count']
+                if i['class'] == 'FC':
+                    remain['FC'] = i['count']
+
+            item['FCSellable'] = remain['FC'] < item['FCseats']
+            item['BCSellable'] = remain['BC'] < item['BCseats']
+            item['ECSellable'] = remain['EC'] < item['ECseats']
+
+            item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
+            item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+
+            ret.append(item)
+        print(ret)
 
         # todo: 这里做模糊搜索吧，如果缺少（部分）信息，则返回全部信息（比如，若航班号和日期均为空，则返回所有可售航班）
         return jsonify({'status': 'success',
