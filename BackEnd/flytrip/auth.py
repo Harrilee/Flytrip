@@ -28,21 +28,6 @@ def login_required(view):
     return wrapped_view
 
 
-# @bp.before_app_request
-# def load_logged_in_user():
-#     user_email = session.get('email')
-#
-#     if user_email is None:
-#         g.user = None
-#     else:
-#         db = get_db()
-#         with db.cursor() as cursor:
-#             cursor.execute(
-#                 'SELECT * FROM customer WHERE email = %s LIMIT 1;', (user_email,)
-#             )
-#             g.user = cursor.fetchone()
-
-
 @bp.route('/register', methods=['POST'])
 def register():
     """
