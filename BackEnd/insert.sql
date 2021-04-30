@@ -1,8 +1,8 @@
-INSERT INTO airport (name, city)
+INSERT INTO airport (airport_name, airport_city)
 VALUES ('JFK', 'New York'),
        ('PVG', 'Shanghai');
 
-INSERT INTO airline (name)
+INSERT INTO airline (airline_name)
 VALUES ('China Eastern'),
        ('airline a'),
        ('airline b'),
@@ -27,11 +27,11 @@ VALUES ('user1@test.com', 'user1', 'password1', 'building1', 'street1', 'Shangha
 INSERT INTO booking_agent (email, password, booking_agent_id)
 VALUES ('agent1@test.com', 'password1', 1234);
 
-INSERT INTO airplane (id, airline_name, seats)
+INSERT INTO airplane (airplane_id, airline_name, seats)
 VALUES (1, 'China Eastern', 100),
        (1, 'airline a', 150);
 
-INSERT INTO staff (username, password, first_name, last_name, date_of_birth, airline_name)
+INSERT INTO airline_staff (username, password, first_name, last_name, date_of_birth, airline_name)
 VALUES ('staff1', 'password1', 'john', 'smith', '2000-1-1', 'China Eastern');
 
 INSERT INTO flight (airline_name, airplane_id, flight_num, departure_time, arrival_time, price, status,
@@ -47,8 +47,11 @@ VALUES ('China Eastern', 1, 1),
        ('China Eastern', 1, 3),
        ('China Eastern', 1, 4);
 
-INSERT INTO purchase (customer_email, ticket_id, agent_id, date)
+INSERT INTO purchases (customer_email, ticket_id, booking_agent_id, purchase_date)
 VALUES ('user1@test.com', 1, NULL, '2021-1-1'),
        ('user1@test.com', 2, NULL, '2021-1-1'),
        ('user1@test.com', 3, 1234, '2021-1-1'),
        ('user1@test.com', 4, 1234, '2021-1-1');
+
+INSERT INTO admin (admin_id, password)
+VALUES ('1', 'root');
