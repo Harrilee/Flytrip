@@ -62,7 +62,7 @@ function Tickets() {
                 <div style={{margin: 'auto', maxWidth: '1000px'}}>
                     <Form style={{padding: '20px', border: 'lightgrey solid 1px', borderRadius: '2px'}}
                           onFinish={(form) => {
-                              let url = 'http://localhost:5000/api/search'
+                              let url = 'http://localhost:5000/api/search?'
                               url += 'action=getTickets'
                               Object.keys(form).forEach(key => {
                                   url += '&' + key + '=' + form[key]
