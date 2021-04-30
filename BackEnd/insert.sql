@@ -53,5 +53,5 @@ VALUES ('user1@test.com', 1, NULL, '2021-1-1'),
        ('user1@test.com', 3, 1234, '2021-1-1'),
        ('user1@test.com', 4, 1234, '2021-1-1');
 
-INSERT INTO admin (admin_id, password)
+INSERT INTO admin (admin_name, password)
 VALUES ('1', 'pbkdf2:sha256:150000$SbLyIzDI$0df83a4f07f173c445fec78079824601aa4935c0a88fc5a4d99f86c55c0f4e0e');

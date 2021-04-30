@@ -16,12 +16,12 @@ CREATE TABLE `airline`
 
 CREATE TABLE `airline_staff`
 (
-    `username`      VARCHAR(50) NOT NULL,
+    `username`      VARCHAR(50)  NOT NULL,
     `password`      VARCHAR(100) NOT NULL,
-    `first_name`    VARCHAR(50) NOT NULL,
-    `last_name`     VARCHAR(50) NOT NULL,
-    `date_of_birth` DATE        NOT NULL,
-    `airline_name`  VARCHAR(50) NOT NULL,
+    `first_name`    VARCHAR(50)  NOT NULL,
+    `last_name`     VARCHAR(50)  NOT NULL,
+    `date_of_birth` DATE         NOT NULL,
+    `airline_name`  VARCHAR(50)  NOT NULL,
     PRIMARY KEY (`username`),
     FOREIGN KEY (`airline_name`) REFERENCES `airline` (`airline_name`)
 ) ENGINE = InnoDB
@@ -65,9 +65,9 @@ CREATE TABLE `airport`
 
 CREATE TABLE `booking_agent`
 (
-    `email`            VARCHAR(50) NOT NULL,
+    `email`            VARCHAR(50)  NOT NULL,
     `password`         VARCHAR(100) NOT NULL,
-    `booking_agent_id` INT(11)     NOT NULL,
+    `booking_agent_id` INT(11)      NOT NULL,
     PRIMARY KEY (`email`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
@@ -80,18 +80,18 @@ CREATE TABLE `booking_agent`
 
 CREATE TABLE `customer`
 (
-    `email`               VARCHAR(50) NOT NULL,
-    `name`                VARCHAR(50) NOT NULL,
+    `email`               VARCHAR(50)  NOT NULL,
+    `name`                VARCHAR(50)  NOT NULL,
     `password`            VARCHAR(100) NOT NULL,
-    `building_number`     VARCHAR(30) NOT NULL,
-    `street`              VARCHAR(30) NOT NULL,
-    `city`                VARCHAR(30) NOT NULL,
-    `state`               VARCHAR(30) NOT NULL,
-    `phone_number`        INT(11)     NOT NULL,
-    `passport_number`     VARCHAR(30) NOT NULL,
-    `passport_expiration` DATE        NOT NULL,
-    `passport_country`    VARCHAR(50) NOT NULL,
-    `date_of_birth`       DATE        NOT NULL,
+    `building_number`     VARCHAR(30)  NOT NULL,
+    `street`              VARCHAR(30)  NOT NULL,
+    `city`                VARCHAR(30)  NOT NULL,
+    `state`               VARCHAR(30)  NOT NULL,
+    `phone_number`        INT(11)      NOT NULL,
+    `passport_number`     VARCHAR(30)  NOT NULL,
+    `passport_expiration` DATE         NOT NULL,
+    `passport_country`    VARCHAR(50)  NOT NULL,
+    `date_of_birth`       DATE         NOT NULL,
     PRIMARY KEY (`email`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
@@ -164,8 +164,8 @@ CREATE TABLE `purchases`
 
 CREATE TABLE `admin`
 (
-    `admin_id` INT(11)     NOT NULL,
-    `password` VARCHAR(100) NOT NULL,
-    PRIMARY KEY (`admin_id`)
+    `admin_name` VARCHAR(50)  NOT NULL,
+    `password`   VARCHAR(100) NOT NULL,
+    PRIMARY KEY (`admin_name`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
