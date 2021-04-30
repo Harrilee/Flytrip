@@ -28,21 +28,4 @@ def create_app(test_config=None):
     app.register_blueprint(auth.bp)
     app.register_blueprint(api.bp)
 
-    @app.route('/test')
-    def test():
-        return 'hello world!'
-
-    @app.route('/', methods=['GET'])
-    def GETApi():
-        print(session)
-        print(request.args)
-        if request.args.get('action') == 'getTickets':  # Guest（非登录）查看所有票
-            # todo: 这里做模糊搜索吧，如果缺少（部分）信息，则返回全部信息（比如，若航班号和日期均为空，则返回所有可售航班）
-            return jsonify({'status': 'success',
-                            'dataSource': testData.ticketDataSource})
-        elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
-            # todo: 这个也做模糊搜索吧，类似上面
-            return jsonify({'status': 'success',
-                            'dataSource': testData.statusDataSource})
-
     return app

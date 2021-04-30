@@ -1,10 +1,12 @@
-from . import testData
+import datetime
+import random
+
 from flask import (
     Blueprint, request, jsonify, session
 )
-import time
-import random
-from .db import init_db, clear_db
+
+from . import testData
+from .db import *
 
 bp = Blueprint('api', __name__, url_prefix='/api')
 
@@ -38,7 +40,7 @@ def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所�
 
 
 @bp.route('/set_status_staff', methods=['POST'])
-def statusStaffChange():  # staff 拿到“本航司”的status数据，需要所有status的数据
+def statusStaffChange():
     req = request.json
     print(req)
     return jsonify({'status': 'success',
@@ -197,3 +199,41 @@ def get_destination():
                         'year': ['Shanghai', 'Hangzhou', 'Chengdu'],
                     },
                     'msg': ''})
+
+
+def get_cities():
+    db = get_db()
+    with db.cursor() as cursor:
+        cursor.execute("SELECT DISTINCT airport_city FROM airport;")
+        result = cursor.fetchall()
+        print(result)
+        return result
+
+
+@bp.route('/search', methods=['GET'])
+def search_flight():
+    print(session)
+    print(request.args)
+    if request.args.get('action') == 'getTickets':  # Guest（非登录）查看所有票
+        date = request.args.get('date')
+        date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000)).date()
+        print(date)
+        fr = request.args.get('from')
+        to = request.args.get('to')
+        db = get_db()
+        cities = get_cities()
+        result = None
+        with db.cursor() as cursor:
+            cursor.execute("SELECT * FROM ticket NATURAL JOIN flight WHERE (departure_time = %s "
+                           "OR arrival_time = %s) AND departure_airport LIKE %s AND arrival_airport LIKE %s",
+                           (date, date, fr, to,))
+            result = cursor.fetchall()
+        print(result)
+
+        # todo: 这里做模糊搜索吧，如果缺少（部分）信息，则返回全部信息（比如，若航班号和日期均为空，则返回所有可售航班）
+        return jsonify({'status': 'success',
+                        'dataSource': result})
+    elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
+        # todo: 这个也做模糊搜索吧，类似上面
+        return jsonify({'status': 'success',
+                        'dataSource': testData.statusDataSource})
