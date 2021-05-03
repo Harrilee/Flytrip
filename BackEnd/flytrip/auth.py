@@ -34,8 +34,9 @@ def staff_login_required(view):
 
     @functools.wraps(view)
     def wrapped_view(**kwargs):
+        print(session)
         if session.get('user_type') != 'staff':
-            return redirect(url_for('auth.login'))
+            return redirect('/')
         return view(**kwargs)
 
     return wrapped_view
@@ -51,7 +52,7 @@ def agent_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if session.get('user_type') != 'agent':
-            return redirect(url_for('auth.login'))
+            return redirect('/')
         return view(**kwargs)
 
     return wrapped_view
@@ -67,7 +68,7 @@ def customer_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if session.get('user_type') != 'customer':
-            return redirect(url_for('auth.login'))
+            return redirect('/')
         return view(**kwargs)
 
     return wrapped_view
@@ -365,8 +366,6 @@ def get_session_info():
     Get current session info
     :return: json string of the status and the session info
     """
-    req = request.json
-    print('req:', req)
     print('session:', session)
     if 'username' in session:
         try:
@@ -382,7 +381,7 @@ def get_session_info():
     else:
         print('No session found')
         session['username'] = '1890'
-        print('something')
+        print('fallback to guest user')
         print(session)
         return jsonify({'status': 'failed',
                         'user_type': 'guest',
