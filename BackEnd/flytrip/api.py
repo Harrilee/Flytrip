@@ -122,7 +122,7 @@ def get_passenger_info():
                         'data': data})
     except pymysql.Error as err:
         return jsonify({'status': 'failed',
-                       'msg': err.args[1]})
+                        'msg': err.args[1]})
 
 
 @bp.route('/admin/import_data', methods=['POST'])
@@ -235,9 +235,21 @@ def get_selling():
 @bp.route('/get_top_customer', methods=['GET'])  # for staff
 # @staff_login_required
 def get_top_customer():
-    return jsonify({'status': 'success',
-                    'data': testData.top_customer,
-                    'msg': ''})
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute(
+                "SELECT email, firstname, lastname FROM customer c NATURAL JOIN purchases p;")
+            # TODO: I don't know how to write this query
+
+            return jsonify({'status': 'success',
+                            'data': testData.top_customer,
+                            'msg': ''})
+
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'data': [],
+                        'msg': err.args[1]})
 
 
 @bp.route('/agent_get_top_customer_by_ticket', methods=['GET'])  # for agent

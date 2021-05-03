@@ -139,8 +139,9 @@ CREATE TABLE `ticket`
     `airline_name` VARCHAR(50) NOT NULL,
     `flight_num`   INT(11)     NOT NULL,
     `class`        VARCHAR(50) NOT NULL,
+    `date`         DATE        NOT NULL,
     PRIMARY KEY (`ticket_id`),
-    FOREIGN KEY (`airline_name`, `flight_num`) REFERENCES `flight` (`airline_name`, `flight_num`)
+    FOREIGN KEY (`airline_name`, `flight_num`, `date`) REFERENCES `flight` (`airline_name`, `flight_num`, `date`)
 ) ENGINE = InnoDB
   DEFAULT CHARSET = latin1;
 

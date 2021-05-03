@@ -57,11 +57,11 @@ VALUES ('China Eastern', 1, 1, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 10
        ('China Eastern', 1, 4, '2021-1-1 00:00:00', '2021-1-2 00:00:00', 100, 10, 1, 'in-progress', 'PVG', 'JFK',
         '2021-1-1');
 
-INSERT INTO ticket (airline_name, flight_num, ticket_id, class)
-VALUES ('China Eastern', 1, 1, 'BC'),
-       ('China Eastern', 1, 2, 'BC'),
-       ('China Eastern', 1, 3, 'EC'),
-       ('China Eastern', 1, 4, 'FC');
+INSERT INTO ticket (airline_name, flight_num, ticket_id, class, date)
+VALUES ('China Eastern', 1, 1, 'BC', '2021-1-1'),
+       ('China Eastern', 1, 2, 'BC', '2021-1-1'),
+       ('China Eastern', 1, 3, 'EC', '2021-1-1'),
+       ('China Eastern', 1, 4, 'FC', '2021-1-1');
 
 INSERT INTO purchases (customer_email, ticket_id, booking_agent_id, purchase_date)
 VALUES ('user1@test.com', 1, NULL, '2021-1-1'),
