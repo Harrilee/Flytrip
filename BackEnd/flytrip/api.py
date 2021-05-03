@@ -68,10 +68,23 @@ def statusStaffChange():
     print(session)
     req = request.json
     print(req)
-    return jsonify({'status': 'success',
-                    'msg': ''})
-    return jsonify({'status': 'failed',
-                    'msg': 'just failed'})
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            flight_num = req['flight_num']
+            date = req['date']
+            airline = req['airline']
+            status = req['new_status']
+
+            cursor.execute("UPDATE flight SET status = %s WHERE flight_num = %s AND airline_name = %s AND date = %s;",
+                           (status, flight_num, airline, date))
+            db.commit()
+            return jsonify({'status': 'success',
+                            'msg': ''})
+
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
 
 
 @bp.route('/get_passengers', methods=['POST'])
