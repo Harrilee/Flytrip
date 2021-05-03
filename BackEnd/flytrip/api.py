@@ -1,5 +1,6 @@
 import datetime
 import random
+import sys
 
 from . import testData
 from .auth import *
@@ -32,19 +33,39 @@ def order():  # agent和customer共用接口
 @bp.route('/get_status_staff', methods=['GET'])
 # @staff_login_required
 def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所有status的数据
-    print()
+    print(session)
     req = request.json
     print(req)
-    db = get_db()
-    print(session)
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute("SELECT * FROM airline_staff WHERE username = %s;", (session['username'],))
+            airline = cursor.fetchone()['airline_name']
+            cursor.execute("SELECT * FROM flight WHERE airline_name = %s;", (airline,))
+            data = cursor.fetchall()
+            for index, item in enumerate(data):
+                item['key'] = index
+                item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
+                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+                item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
+                item['depart_city'] = get_city_from_airport(item['departure_airport'])
 
-    return jsonify({'status': 'success',
-                    'dataSource': testData.statusDataSource})
+        return jsonify({'status': 'success',
+                        'dataSource': data})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1],
+                        'dataSource': testData.statusDataSource})
+    except:
+        return jsonify({'status': 'failed',
+                        'msg': 'Unknown error',
+                        'dataSource': testData.statusDataSource})
 
 
 @bp.route('/set_status_staff', methods=['POST'])
 # @staff_login_required
 def statusStaffChange():
+    print(session)
     req = request.json
     print(req)
     return jsonify({'status': 'success',
@@ -74,10 +95,12 @@ def get_passengers():
 
         result = {'FC': [], 'EC': [], 'BC': []}
         for i in data:
-            result[i['class']].append({'name': i['name'], 'email': i['email']})
-        return jsonify({'status': 'success',
-                        'msg': '',
-                        'data': result})
+            result[i['class']].append({'name': i['firstname'] + ' ' + i['lastname'],
+                                       'firstname': i['firstname'], 'lastname': i['lastname'],
+                                       'email': i['email']})
+            return jsonify({'status': 'success',
+                            'msg': '',
+                            'data': result})
     except pymysql.Error as err:
         return jsonify({'status': 'failed',
                         'msg': err.args[1]})
@@ -88,11 +111,18 @@ def get_passengers():
 def get_passenger_info():
     req = request.json
     print(req)
-    return jsonify({'status': 'success',
-                    'msg': '',
-                    'data': testData.passenger_info})
-    return jsonify({'status': 'failed',
-                    'msg': 'just failed'})
+    email = req['email']
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute("SELECT * FROM customer WHERE email = %s;", (email,))
+            data = cursor.fetchone()
+        return jsonify({'status': 'success',
+                        'msg': '',
+                        'data': data})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                       'msg': err.args[1]})
 
 
 @bp.route('/admin/import_data', methods=['POST'])
@@ -118,6 +148,7 @@ def clear():
 @bp.route('/new_flight', methods=['POST'])
 # @staff_login_required
 def addNewFlight():
+    print(session)
     req = request.json
     print(req)
     db = get_db()
@@ -322,6 +353,17 @@ def get_cities():
         return cities
 
 
+def get_city_from_airport(airport):
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute("SELECT airport_city FROM airport WHERE airport_name = %s;", (airport,))
+            result = cursor.fetchone()
+            return result['airport_city']
+    except pymysql.Error:
+        return 'No such airport'
+
+
 @bp.route('/search', methods=['GET'])
 def search_flight():
     print(session)
@@ -353,8 +395,8 @@ def search_flight():
         for index, item in enumerate(result):
             item['key'] = index
             item['airline'] = item['airline_name']
-            item['depart_city'] = 'Shanghai'
-            item['arrive_city'] = 'Beijing'
+            item['depart_city'] = get_city_from_airport(item['departure_airport'])
+            item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
             item['depart_time'] = item['departure_time'].strftime("%H:%M")
             item['arrive_time'] = item['arrival_time'].strftime("%H:%M")
             item['date'] = date

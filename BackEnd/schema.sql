@@ -83,7 +83,8 @@ CREATE TABLE `booking_agent`
 CREATE TABLE `customer`
 (
     `email`               VARCHAR(50)  NOT NULL,
-    `name`                VARCHAR(50)  NOT NULL,
+    `firstname`           VARCHAR(50)  NOT NULL,
+    `lastname`            VARCHAR(50)  NOT NULL,
     `password`            VARCHAR(100) NOT NULL,
     `building_number`     VARCHAR(30)  NOT NULL,
     `street`              VARCHAR(30)  NOT NULL,

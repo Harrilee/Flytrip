@@ -84,8 +84,8 @@ ticketDataSource = [
 statusDataSource = [
     {
         'key': '1',
-        'airline': 'China Eastern Airline',
-        'flight_num': 'MU5401',
+        'airline': 'China Eastern',
+        'flight_num': '1',
         'departure_time': '08:10',
         'arrival_time': '11:05',
         'status': 'delayed',
@@ -95,7 +95,7 @@ statusDataSource = [
         'depart_airport': "Hongqiao International Airport",
         'durationHour': 3,
         'durationMin': 50,
-        'date': '2021-04-08'
+        'date': '2021-01-01'
     },
     {
         'key': '2',

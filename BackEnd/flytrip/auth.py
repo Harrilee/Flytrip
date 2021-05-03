@@ -97,12 +97,13 @@ def register():
         if msg is None:
             with db.cursor() as cursor:
                 cursor.execute(
-                    "INSERT INTO customer(email, name, password, building_number, street, city, state, phone_number, "
+                    "INSERT INTO customer(email, firstname, lastname, password, building_number, street, city, state, phone_number, "
                     "passport_number, passport_expiration, passport_country, date_of_birth) "
                     " VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (
                         req['email'],
-                        req['firstname'] + ' ' + req['lastname'],
+                        req['firstname'],
+                        req['lastname'],
                         generate_password_hash(req['password']),
                         req['building_number'],
                         req['street'],
@@ -220,129 +221,136 @@ def login():
     password = req['password']
     msg = None
     print('req:', req)
-    if user_type == 'customer':
-        user = None
-        with db.cursor() as cursor:
-            if user_type == 'customer':
+    try:
+        if user_type == 'customer':
+            user = None
+            with db.cursor() as cursor:
+                if user_type == 'customer':
+                    cursor.execute(
+                        'SELECT * FROM customer WHERE email = %s LIMIT 1;', (req['email'],)
+                    )
+                    user = cursor.fetchone()
+
+            if user is None:
+                msg = 'Incorrect username.'
+            elif not check_password_hash(user['password'], password):
+                msg = 'Incorrect password.'
+
+            if msg is None:
+                session.clear()
+                session['user_type'] = user_type
+                session['email'] = req['email']
+                print('login function session: ', session)
+                return jsonify({
+                    'status': 'success',
+                    'user_type': user_type,
+                    'username': user['name']
+                })
+
+            return jsonify({
+                'status': 'failed',
+                'user_type': user_type,
+                'msg': msg
+            })
+
+        elif user_type == 'agent':
+            user = None
+            with db.cursor() as cursor:
                 cursor.execute(
-                    'SELECT * FROM customer WHERE email = %s LIMIT 1;', (req['email'],)
+                    'SELECT * FROM booking_agent WHERE email = %s LIMIT 1;', (req['email'],)
                 )
                 user = cursor.fetchone()
 
-        if user is None:
-            msg = 'Incorrect username.'
-        elif not check_password_hash(user['password'], password):
-            msg = 'Incorrect password.'
+            if user is None:
+                msg = 'Incorrect username.'
+            elif not check_password_hash(user['password'], password):
+                msg = 'Incorrect password.'
+            else:
+                try:
+                    int(req['agent_ID'])
+                except ValueError:
+                    msg = 'Agent ID should be a number.'
 
-        if msg is None:
-            session.clear()
-            session['user_type'] = user_type
-            session['email'] = req['email']
-            print('login function session: ', session)
+            if msg is None:
+                session.clear()
+                session['user_type'] = user_type
+                session['email'] = user['email']
+                session['email'] = user['email']
+                session['agent_ID'] = user['booking_agent_id']
+                print('login function session: ', session)
+                return jsonify({
+                    'status': 'success',
+                    'user_type': user_type,
+                    'agent_ID': user['booking_agent_id'],
+                    'username': user['booking_agent_id']  # 我记得agent注册的时候也有个username的
+                })
             return jsonify({
-                'status': 'success',
+                'status': 'failed',
                 'user_type': user_type,
-                'username': user['name']
+                'msg': msg
             })
 
-        return jsonify({
-            'status': 'failed',
-            'user_type': user_type,
-            'msg': msg
-        })
+        elif user_type == 'staff':
+            user = None
+            with db.cursor() as cursor:
+                cursor.execute(
+                    'SELECT * FROM airline_staff WHERE username = %s LIMIT 1;', (req['username'],)
+                )
+                user = cursor.fetchone()
 
-    elif user_type == 'agent':
-        user = None
-        with db.cursor() as cursor:
-            cursor.execute(
-                'SELECT * FROM booking_agent WHERE email = %s LIMIT 1;', (req['email'],)
-            )
-            user = cursor.fetchone()
+            if user is None:
+                msg = 'Incorrect username.'
+            elif not check_password_hash(user['password'], password):
+                msg = 'Incorrect password.'
 
-        if user is None:
-            msg = 'Incorrect username.'
-        elif not check_password_hash(user['password'], password):
-            msg = 'Incorrect password.'
-        else:
-            try:
-                int(req['agent_ID'])
-            except ValueError:
-                msg = 'Agent ID should be a number.'
-
-        if msg is None:
-            session.clear()
-            session['user_type'] = user_type
-            session['email'] = user['email']
-            session['email'] = user['email']
-            session['agent_ID'] = user['booking_agent_id']
-            print('login function session: ', session)
+            if msg is None:
+                session.clear()
+                session['user_type'] = user_type
+                session['username'] = req['username']
+                print('login function session: ', session)
+                return jsonify({
+                    'status': 'success',
+                    'user_type': user_type,
+                    'username': req['username']
+                })
             return jsonify({
-                'status': 'success',
+                'status': 'failed',
                 'user_type': user_type,
-                'agent_ID': user['booking_agent_id'],
-                'username': user['booking_agent_id']  # 我记得agent注册的时候也有个username的
+                'msg': msg
             })
-        return jsonify({
-            'status': 'failed',
-            'user_type': user_type,
-            'msg': msg
-        })
+        elif user_type == 'admin':
+            user = None
+            with db.cursor() as cursor:
+                cursor.execute(
+                    'SELECT * FROM admin WHERE admin_name = %s LIMIT 1;', (req['username'],)
+                )
+                user = cursor.fetchone()
 
-    elif user_type == 'staff':
-        user = None
-        with db.cursor() as cursor:
-            cursor.execute(
-                'SELECT * FROM airline_staff WHERE username = %s LIMIT 1;', (req['username'],)
-            )
-            user = cursor.fetchone()
+            if user is None:
+                msg = 'Incorrect admin ID.'
+            elif not check_password_hash(user['password'], password):
+                msg = 'Incorrect password.'
 
-        if user is None:
-            msg = 'Incorrect username.'
-        elif not check_password_hash(user['password'], password):
-            msg = 'Incorrect password.'
-
-        if msg is None:
-            session.clear()
-            session['user_type'] = user_type
-            session['username'] = req['username']
-            print('login function session: ', session)
+            if msg is None:
+                session.clear()
+                session['user_type'] = user_type
+                print('login function session: ', session)
+                return jsonify({
+                    'status': 'success',
+                    'user_type': user_type,
+                    'username': req['username']
+                })
             return jsonify({
-                'status': 'success',
+                'status': 'failed',
                 'user_type': user_type,
-                'username': req['username']
+                'msg': msg
             })
+    except pymysql.Error as err:
         return jsonify({
-            'status': 'failed',
-            'user_type': user_type,
-            'msg': msg
-        })
-    elif user_type == 'admin':
-        user = None
-        with db.cursor() as cursor:
-            cursor.execute(
-                'SELECT * FROM admin WHERE admin_name = %s LIMIT 1;', (req['username'],)
-            )
-            user = cursor.fetchone()
-
-        if user is None:
-            msg = 'Incorrect admin ID.'
-        elif not check_password_hash(user['password'], password):
-            msg = 'Incorrect password.'
-
-        if msg is None:
-            session.clear()
-            session['user_type'] = user_type
-            print('login function session: ', session)
-            return jsonify({
-                'status': 'success',
+                'status': 'failed',
                 'user_type': user_type,
-                'username': req['username']
+                'msg': err.args[1]
             })
-        return jsonify({
-            'status': 'failed',
-            'user_type': user_type,
-            'msg': msg
-        })
 
 
 @bp.route('/logout', methods=['POST'])
