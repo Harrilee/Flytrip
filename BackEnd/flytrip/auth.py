@@ -1,7 +1,6 @@
 import functools
-import re
-
 import pymysql
+import re
 from flask import (Blueprint, jsonify, redirect, request, session, url_for)
 from werkzeug.security import generate_password_hash, check_password_hash
 
@@ -20,7 +19,7 @@ def admin_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if session.get('user_type') != 'admin':
-            return redirect(url_for('auth.login'))
+            return redirect('/')
         return view(**kwargs)
 
     return wrapped_view
@@ -36,6 +35,22 @@ def staff_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if session.get('user_type') != 'staff':
+            return redirect(url_for('auth.login'))
+        return view(**kwargs)
+
+    return wrapped_view
+
+
+def agent_login_required(view):
+    """
+    Define the login_required decorator
+    :param view: function to wrap
+    :return: if logged in, return the original function, otherwise redirect to login
+    """
+
+    @functools.wraps(view)
+    def wrapped_view(**kwargs):
+        if session.get('user_type') != 'agent':
             return redirect(url_for('auth.login'))
         return view(**kwargs)
 
@@ -344,7 +359,6 @@ def logout():
 
 
 @bp.route('/getSessionInfo', methods=['POST'])
-# @login_required
 # Harry: 我这里前端会报method not allowed的错，先去掉了
 def get_session_info():
     """

@@ -30,13 +30,20 @@ def order():  # agent和customer共用接口
 
 
 @bp.route('/get_status_staff', methods=['GET'])
+@staff_login_required
 def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所有status的数据
-    print(request.args)
+    print()
+    req = request.json
+    print(req)
+    db = get_db()
+    print(session)
+
     return jsonify({'status': 'success',
                     'dataSource': testData.statusDataSource})
 
 
 @bp.route('/set_status_staff', methods=['POST'])
+@staff_login_required
 def statusStaffChange():
     req = request.json
     print(req)
@@ -47,6 +54,7 @@ def statusStaffChange():
 
 
 @bp.route('/get_passengers', methods=['POST'])
+@staff_login_required
 def get_passengers():
     req = request.json
     print(req)
@@ -60,7 +68,7 @@ def get_passengers():
             cursor.execute("SELECT * FROM customer JOIN purchases p ON customer.email = p.customer_email "
                            "JOIN ticket t ON p.ticket_id = t.ticket_id"
                            " JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num"
-                           " WHERE f.flight_num = %s and f.airline_name = %s and f.date = %s;",
+                           " WHERE f.flight_num = %s AND f.airline_name = %s AND f.date = %s;",
                            (flight_num, airline, date,))
             data = cursor.fetchall()
 
@@ -76,6 +84,7 @@ def get_passengers():
 
 
 @bp.route('/get_passenger_info', methods=['POST'])
+@staff_login_required
 def get_passenger_info():
     req = request.json
     print(req)
@@ -87,24 +96,27 @@ def get_passenger_info():
 
 
 @bp.route('/admin/import_data', methods=['POST'])
+@admin_login_required
 def import_data():
     try:
         init_db()
         return jsonify({'status': 'success'})
-    except:
+    except error:
         return jsonify({'status': 'failed'})
 
 
 @bp.route('/admin/clear', methods=['POST'])
+@admin_login_required
 def clear():
     try:
         clear_db()
         return jsonify({'status': 'success'})
-    except:
+    except error:
         return jsonify({'status': 'failed'})
 
 
 @bp.route('/new_flight', methods=['POST'])
+@staff_login_required
 def addNewFlight():
     req = request.json
     print(req)
@@ -163,6 +175,7 @@ def addNewPlane():
 
 
 @bp.route('/new_airport', methods=['POST'])
+@staff_login_required
 def addNewAirport():
     req = request.json
     db = get_db()
@@ -189,6 +202,7 @@ def get_selling():
 
 
 @bp.route('/get_top_customer', methods=['GET'])  # for staff
+@staff_login_required
 def get_top_customer():
     return jsonify({'status': 'success',
                     'data': testData.top_customer,
@@ -196,6 +210,7 @@ def get_top_customer():
 
 
 @bp.route('/agent_get_top_customer_by_ticket', methods=['GET'])  # for agent
+@agent_login_required
 def get_top_customer_ticket():
     return jsonify({'status': 'success',
                     'data': testData.top_customer_ticket,
@@ -203,6 +218,7 @@ def get_top_customer_ticket():
 
 
 @bp.route('/agent_get_top_customer_by_commission', methods=['GET'])  # for agent
+@agent_login_required
 def get_top_customer_commission():
     return jsonify({'status': 'success',
                     'data': testData.top_customer_commission,
@@ -266,7 +282,7 @@ def get_destination():
         cursor.execute("SELECT COUNT(*) count,b.airport_city "
                        " FROM (flight JOIN airport a ON flight.arrival_airport = a.airport_name) "
                        "JOIN airport b ON departure_airport = b.airport_name "
-                       "WHERE departure_time > DATE_SUB(NOW(), INTERVAL 1 Year) "
+                       "WHERE departure_time > DATE_SUB(NOW(), INTERVAL 1 YEAR) "
                        "GROUP BY b.airport_city "
                        "ORDER BY count DESC "
                        "LIMIT 3; ")
