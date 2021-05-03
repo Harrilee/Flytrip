@@ -663,7 +663,7 @@ function Manage() {
 
 
     function refresh_status(force_refresh = false) {
-        fetch('http://localhost:5000/api/get_status_staff')
+        fetch('http://localhost:5000/api/get_status_staff',{credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 if (!statusData.loaded || force_refresh) {
@@ -1196,7 +1196,7 @@ function Statistics() {
 
         const [selling, setSelling] = React.useState(null)
         if (!selling) {
-            fetch('http://localhost:5000/api/get_selling_statistics')
+            fetch('http://localhost:5000/api/get_selling_statistics',{credentials: 'include',})
                 .then((resp) => resp.json())
                 .then(data => {
                     setSelling(data.data);
@@ -1267,7 +1267,7 @@ function Statistics() {
                 render: (text, record) => <StatisticsViewOrders record={record}/>
             }
         ]
-        fetch('http://localhost:5000/api/get_top_customer')
+        fetch('http://localhost:5000/api/get_top_customer',{credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 if (JSON.stringify(customerStats) !== JSON.stringify(data.data)) {
@@ -1303,7 +1303,7 @@ function Statistics() {
                 key: 'selling'
             },
         ]
-        fetch('http://localhost:5000/api/get_top_agents')
+        fetch('http://localhost:5000/api/get_top_agents',{credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 if (JSON.stringify(agentStats) !== JSON.stringify(data.data)) {
@@ -1324,7 +1324,7 @@ function Statistics() {
 
     function SellingGraph() {
         const [sellingStats, setSellingStats] = React.useState([])
-        fetch('http://localhost:5000/api/get_selling')
+        fetch('http://localhost:5000/api/get_selling',{credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 if (JSON.stringify(sellingStats) !== JSON.stringify(data.data)) {
@@ -1383,7 +1383,7 @@ function Statistics() {
     function PieChart() {
         const [sourceData, setSourceData] = React.useState({data: null, loaded: false})
         if (!sourceData.loaded) {
-            fetch('http://localhost:5000/api/get_source')
+            fetch('http://localhost:5000/api/get_source',{credentials: 'include',})
                 .then((resp) => resp.json())
                 .then(data => {
                     setSourceData({data: data.data, loaded: true});
@@ -1492,7 +1492,7 @@ function Statistics() {
     function Destination() {
         const [sourceData, setSourceData] = React.useState({data: null, loaded: false})
         if (!sourceData.loaded) {
-            fetch('http://localhost:5000/api/get_destination')
+            fetch('http://localhost:5000/api/get_destination',{credentials: 'include',})
                 .then((resp) => resp.json())
                 .then(data => {
                     setSourceData({data: data.data, loaded: true});

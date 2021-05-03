@@ -138,7 +138,7 @@ function Tickets() {
                                   url += '&' + key + '=' + form[key]
                               })
                               console.log(url)
-                              fetch(url)
+                              fetch(url,{credentials: 'include',})
                                   .then((resp) => resp.json())
                                   .then(data => {
                                       setDataSource(data.dataSource)
@@ -284,7 +284,7 @@ function UpcomingFlights() {
                                   url += '&' + key + '=' + form[key]
                               })
                               console.log(url)
-                              fetch(url)
+                              fetch(url,{credentials: 'include',})
                                   .then((resp) => resp.json())
                                   .then(data => {
                                       setDataSource(data.dataSource)

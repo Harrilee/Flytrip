@@ -149,7 +149,7 @@ function Tickets() {
                                   url += '&' + key + '=' + form[key]
                               })
                               console.log(url)
-                              fetch(url)
+                              fetch(url,{credentials: 'include',})
                                   .then((resp) => resp.json())
                                   .then(data => {
                                       setDataSource(data.dataSource)
@@ -295,7 +295,7 @@ function UpcomingFlights() {
                                   url += '&' + key + '=' + form[key]
                               })
                               console.log(url)
-                              fetch(url)
+                              fetch(url,{credentials: 'include',})
                                   .then((resp) => resp.json())
                                   .then(data => {
                                       setDataSource(data.dataSource)
@@ -460,14 +460,14 @@ function MyOrders() {
         });
     }
     if (ticketBuyer.length === 0) {
-        fetch('http://localhost:5000/api/agent_get_top_customer_by_ticket')
+        fetch('http://localhost:5000/api/agent_get_top_customer_by_ticket',{credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 setTicketBuyer(data.data);
             });
     }
     if (commission.length === 0) {
-        fetch('http://localhost:5000/api/agent_get_top_customer_by_commission')
+        fetch('http://localhost:5000/api/agent_get_top_customer_by_commission',{credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 setCommission(data.data);
