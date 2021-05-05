@@ -272,6 +272,7 @@ def get_top_customer():
             ORDER BY spending DESC
             LIMIT 5
             ''')
+            # todo: past year 我还没做
             data = cursor.fetchall()
             for each in data:
                 each['spending'] = int(each['spending'])
