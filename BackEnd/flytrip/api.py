@@ -76,7 +76,7 @@ def statusStaffChange():
             airline = req['airline']
             status = req['new_status']
 
-            cursor.execute("UPDATE flight SET status = %s WHERE flight_num = %s AND airline_name = %s AND date = %s;",
+            cursor.execute("UPDATE flight SET status = %s WHERE flight_num = %s AND airline_name = %s AND DATE = %s;",
                            (status, flight_num, airline, date))
             db.commit()
             return jsonify({'status': 'success',
@@ -251,12 +251,33 @@ def get_top_customer():
     try:
         db = get_db()
         with db.cursor() as cursor:
-            cursor.execute(
-                "SELECT email, firstname, lastname FROM customer c NATURAL JOIN purchases p;")
-            # TODO: I don't know how to write this query
-
+            cursor.execute('''
+            WITH SUM_CATEGORY AS(
+                WITH TEMP_SUM AS(
+                    SELECT CONCAT(firstname," ", lastname) AS name, email, class,  SUM(BCprice) AS BC, SUM(FCprice) AS EC, SUM(ECprice) AS FC
+                    FROM ticket JOIN purchases USING (ticket_id)
+                        JOIN flight USING (airline_name, flight_num), customer
+                    WHERE customer.email = purchases.customer_email
+                    GROUP BY email, class
+                )
+                SELECT name, email, class, BC AS price FROM TEMP_SUM WHERE class = 'BC'
+                UNION
+                SELECT name, email, class, EC AS price FROM TEMP_SUM WHERE class = 'EC'
+                UNION
+                SELECT name, email, class, FC AS price FROM TEMP_SUM WHERE class = 'FC'
+            )
+            SELECT name, email, SUM(price) AS spending
+            FROM SUM_CATEGORY
+            GROUP BY email
+            ORDER BY spending DESC
+            LIMIT 5
+            ''')
+            data = cursor.fetchall()
+            for each in data:
+                each['spending'] = int(each['spending'])
+            print(data[0]['spending'])
             return jsonify({'status': 'success',
-                            'data': testData.top_customer,
+                            'data': data,
                             'msg': ''})
 
     except pymysql.Error as err:
@@ -335,24 +356,24 @@ def get_source():
 def get_destination():
     db = get_db()
     with db.cursor() as cursor:
-        cursor.execute("SELECT COUNT(*) count,b.airport_city "
+        cursor.execute("SELECT COUNT(*) COUNT,b.airport_city "
                        " FROM (flight JOIN airport a ON flight.arrival_airport = a.airport_name) "
                        "JOIN airport b ON departure_airport = b.airport_name "
                        "WHERE departure_time > DATE_SUB(NOW(), INTERVAL 1 YEAR) "
                        "GROUP BY b.airport_city "
-                       "ORDER BY count DESC "
+                       "ORDER BY COUNT DESC "
                        "LIMIT 3; ")
         result = cursor.fetchall()
         year = []
         for i in result:
             year.append(i['airport_city'])
 
-        cursor.execute("SELECT COUNT(*) count,b.airport_city "
+        cursor.execute("SELECT COUNT(*) COUNT,b.airport_city "
                        " FROM (flight JOIN airport a ON flight.arrival_airport = a.airport_name) "
                        "JOIN airport b ON departure_airport = b.airport_name "
                        "WHERE departure_time > DATE_SUB(NOW(), INTERVAL 3 MONTH) "
                        "GROUP BY b.airport_city "
-                       "ORDER BY count DESC "
+                       "ORDER BY COUNT DESC "
                        "LIMIT 3; ")
         result = cursor.fetchall()
         month = []
@@ -396,7 +417,7 @@ def search_flight():
     if request.args.get('action') == 'getTickets':  # Guest（非登录）查看所有票
         date = request.args.get('date')
         date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000) - 28800).date()
-        stat = "SELECT * FROM ticket NATURAL JOIN flight NATURAL JOIN airport NATURAL JOIN airplane WHERE status = 'upcoming' AND date = %s"
+        stat = "SELECT * FROM ticket NATURAL JOIN flight NATURAL JOIN airport NATURAL JOIN airplane WHERE status = 'upcoming' AND DATE = %s"
         print(date)
         fr = request.args.get('from')
         to = request.args.get('to')
@@ -432,7 +453,7 @@ def search_flight():
 
             with db.cursor() as cursor:
                 cursor.execute(
-                    "SELECT COUNT(ticket_id) count, class FROM ticket WHERE airline_name = %s AND flight_num = %s GROUP BY class;",
+                    "SELECT COUNT(ticket_id) COUNT, class FROM ticket WHERE airline_name = %s AND flight_num = %s GROUP BY class;",
                     (item['airline_name'], item['flight_num'],))
                 remaining = cursor.fetchall()
             print(remaining)
