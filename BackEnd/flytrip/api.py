@@ -1,6 +1,5 @@
 import datetime
 import random
-import sys
 
 from . import testData
 from .auth import *
@@ -144,7 +143,7 @@ def import_data():
     try:
         init_db()
         return jsonify({'status': 'success'})
-    except error:
+    except:
         return jsonify({'status': 'failed'})
 
 
@@ -154,7 +153,7 @@ def clear():
     try:
         clear_db()
         return jsonify({'status': 'success'})
-    except error:
+    except:
         return jsonify({'status': 'failed'})
 
 
@@ -241,9 +240,46 @@ def addNewAirport():
 @bp.route('/get_selling', methods=['GET'])  # for bar chart
 # @staff_login_required
 def get_selling():
-    return jsonify({'status': 'success',
-                    'data': testData.selling,  # 顺序很重要！！
-                    'msg': ''})
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+WITH temp_sum AS (
+    SELECT date,
+           CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               WHEN class = 'EC' THEN ECprice
+               ELSE ECprice
+               END
+               price
+    FROM flight
+             NATURAL JOIN ticket
+    WHERE DATE > DATE_SUB(NOW(), INTERVAL 1 YEAR)
+)
+
+SELECT DATE_FORMAT(date, '%b') month, SUM(price) selling
+FROM temp_sum
+GROUP BY DATE_FORMAT(date, '%b')
+''')
+            data = cursor.fetchall()
+            month = [{'month': 'Jan', 'selling': 0}, {'month': 'Feb', 'selling': 0}, {'month': 'Mac', 'selling': 0},
+                     {'month': 'Apr', 'selling': 0}, {'month': 'May', 'selling': 0}, {'month': 'Jun', 'selling': 0},
+                     {'month': 'Jul', 'selling': 0}, {'month': 'Aug', 'selling': 0}, {'month': 'Sep', 'selling': 0},
+                     {'month': 'Oct', 'selling': 0}, {'month': 'Nov', 'selling': 0}, {'month': 'Dec', 'selling': 0}]
+            for i in data:
+                print(i)
+                print(i[list(i.keys())[0]])
+                for j in month:
+                    if j['month'] == i['month']:
+                        j['selling'] = int(i['selling'])
+            print(month)
+            return jsonify({'status': 'success',
+                            'data': month,  # 顺序很重要！！
+                            'msg': ''})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
 
 
 @bp.route('/get_top_customer', methods=['GET'])  # for staff
@@ -253,30 +289,43 @@ def get_top_customer():
         db = get_db()
         with db.cursor() as cursor:
             cursor.execute('''
-            WITH SUM_CATEGORY AS(
-                WITH TEMP_SUM AS(
-                    SELECT CONCAT(firstname," ", lastname) AS name, email, class,  SUM(BCprice) AS BC, SUM(FCprice) AS EC, SUM(ECprice) AS FC
-                    FROM ticket JOIN purchases USING (ticket_id)
-                        JOIN flight USING (airline_name, flight_num), customer
-                    WHERE customer.email = purchases.customer_email
-                    GROUP BY email, class
-                )
-                SELECT name, email, class, BC AS price FROM TEMP_SUM WHERE class = 'BC'
-                UNION
-                SELECT name, email, class, EC AS price FROM TEMP_SUM WHERE class = 'EC'
-                UNION
-                SELECT name, email, class, FC AS price FROM TEMP_SUM WHERE class = 'FC'
-            )
-            SELECT name, email, SUM(price) AS spending
-            FROM SUM_CATEGORY
-            GROUP BY email
-            ORDER BY spending DESC
-            LIMIT 5
-            ''')
+WITH SUM_CATEGORY AS (
+    WITH TEMP_SUM AS (
+        SELECT CONCAT(firstname, ' ', lastname) AS name,
+               email,
+               class,
+               SUM(BCprice)                     AS BC,
+               SUM(FCprice)                     AS EC,
+               SUM(ECprice)                     AS FC
+        FROM ticket
+                 JOIN purchases USING (ticket_id)
+                 JOIN flight USING (airline_name, flight_num),
+             customer
+        WHERE customer.email = purchases.customer_email
+        GROUP BY email, class
+    )
+    SELECT name, email, class, BC AS price
+    FROM TEMP_SUM
+    WHERE class = 'BC'
+    UNION
+    SELECT name, email, class, EC AS price
+    FROM TEMP_SUM
+    WHERE class = 'EC'
+    UNION
+    SELECT name, email, class, FC AS price
+    FROM TEMP_SUM
+    WHERE class = 'FC'
+)
+SELECT name, email, SUM(price) AS spending
+FROM SUM_CATEGORY
+GROUP BY email, name
+ORDER BY spending DESC
+LIMIT 5;
+''')
             data = cursor.fetchall()
             for each in data:
                 each['spending'] = int(each['spending'])
-            print(data[0]['spending'])
+            # print(data[0]['spending'])
             return jsonify({'status': 'success',
                             'data': data,
                             'msg': ''})
