@@ -1,7 +1,8 @@
 import functools
-import pymysql
 import re
-from flask import (Blueprint, jsonify, redirect, request, session, url_for)
+
+import pymysql
+from flask import (Blueprint, jsonify, request, session)
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from .db import get_db
@@ -19,7 +20,7 @@ def admin_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if session.get('user_type') != 'admin':
-            return redirect('/')
+            return json
         return view(**kwargs)
 
     return wrapped_view
@@ -36,7 +37,8 @@ def staff_login_required(view):
     def wrapped_view(**kwargs):
         print(session)
         if session.get('user_type') != 'staff':
-            return redirect('/')
+            return jsonify({'status': 'failed',
+                            'msg': 'Operation not permitted.'})
         return view(**kwargs)
 
     return wrapped_view
@@ -52,7 +54,8 @@ def agent_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if session.get('user_type') != 'agent':
-            return redirect('/')
+            return jsonify({'status': 'failed',
+                            'msg': 'Operation not permitted.'})
         return view(**kwargs)
 
     return wrapped_view
@@ -68,7 +71,8 @@ def customer_login_required(view):
     @functools.wraps(view)
     def wrapped_view(**kwargs):
         if session.get('user_type') != 'customer':
-            return redirect('/')
+            return jsonify({'status': 'failed',
+                            'msg': 'Operation not permitted.'})
         return view(**kwargs)
 
     return wrapped_view
@@ -347,10 +351,10 @@ def login():
             })
     except pymysql.Error as err:
         return jsonify({
-                'status': 'failed',
-                'user_type': user_type,
-                'msg': err.args[1]
-            })
+            'status': 'failed',
+            'user_type': user_type,
+            'msg': err.args[1]
+        })
 
 
 @bp.route('/logout', methods=['POST'])

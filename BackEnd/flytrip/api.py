@@ -353,8 +353,7 @@ ORDER BY ticket DESC
 LIMIT 5;
 ''')
             data = cursor.fetchall()
-            # for each in data:
-            #     each['spending'] = int(each['spending'])
+
             return jsonify({'status': 'success',
                             'data': data,
                             'msg': ''})
@@ -376,11 +375,65 @@ def get_top_customer_commission():
 @bp.route('/get_top_agents', methods=['GET'])
 @staff_login_required
 def get_top_agents():
-    return jsonify({'status': 'success',
-                    'data': {'year_tickets': testData.top_agent,
-                             'month_tickets': testData.top_agent,
-                             'year_commission': testData.top_agent},
-                    'msg': ''})
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+   WITH agent_ticket AS (
+    SELECT booking_agent_id, email,
+           CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'EC' THEN ECprice
+               WHEN class = 'FC' THEN FCprice
+               END price
+    FROM ticket
+             NATURAL JOIN purchases
+             NATURAL JOIN flight
+             NATURAL JOIN booking_agent
+    WHERE booking_agent_id IS NOT NULL
+      AND date > DATE_SUB(NOW(), INTERVAL 1 YEAR))
+SELECT CONCAT('Agent ', booking_agent_id) name, SUM(price) selling, email
+FROM agent_ticket
+GROUP BY email
+ORDER BY selling DESC
+LIMIT 5;
+''')
+            year_commission = cursor.fetchall()
+            cursor.execute('''
+SELECT CONCAT('Agent ',booking_agent_id) name, COUNT(*) tickets, email
+FROM purchases
+NATURAL JOIN booking_agent
+WHERE booking_agent_id IS NOT NULL
+  AND purchase_date > DATE_SUB(NOW(), INTERVAL 1 YEAR)
+GROUP BY email
+ORDER BY tickets DESC
+LIMIT 5;
+''')
+            year_tickets = cursor.fetchall()
+            cursor.execute('''
+SELECT CONCAT('Agent ', booking_agent_id) name, COUNT(*) tickets, email
+FROM purchases
+         NATURAL JOIN booking_agent
+WHERE booking_agent_id IS NOT NULL
+  AND purchase_date > DATE_SUB(NOW(), INTERVAL 1 MONTH)
+GROUP BY email
+ORDER BY tickets DESC
+LIMIT 5;
+
+''')
+            month_tickets = cursor.fetchall()
+            for i in year_commission:
+                i['selling'] = int(i['selling'])
+            return jsonify({'status': 'success',
+                            'data': {'year_tickets': year_tickets,
+                                     'month_tickets': month_tickets,
+                                     'year_commission': year_commission},
+                            'msg': ''})
+
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'data': [],
+                        'msg': err.args[1]})
 
 
 @bp.route('/get_customer_orders', methods=['POST'])
