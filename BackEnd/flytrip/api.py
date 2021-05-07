@@ -367,9 +367,39 @@ LIMIT 5;
 @bp.route('/agent_get_top_customer_by_commission', methods=['GET'])  # for agent
 @agent_login_required
 def get_top_customer_commission():
-    return jsonify({'status': 'success',
-                    'data': testData.top_customer_commission,
-                    'msg': ''})
+    try:
+        agent_id = session['agent_ID']
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+    WITH agent_ticket AS (
+    SELECT email,
+           CONCAT(firstname, ' ', lastname) name,
+           CASE
+               WHEN class = 'EC' THEN ECprice
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               END                          price
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (flight_num, date, airline_name)
+             JOIN customer ON purchases.customer_email = customer.email
+    WHERE booking_agent_id = %s)
+SELECT name, email, SUM(price) commission
+FROM agent_ticket
+GROUP BY email
+''', (agent_id,))
+            data = cursor.fetchall()
+            for i in data:
+                i['commission'] = int(i['commission'])
+            return jsonify({'status': 'success',
+                            'data': data,
+                            'msg': ''})
+
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'data': [],
+                        'msg': err.args[1]})
 
 
 @bp.route('/get_top_agents', methods=['GET'])
