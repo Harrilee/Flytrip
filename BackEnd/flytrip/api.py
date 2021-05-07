@@ -239,6 +239,7 @@ def addNewAirport():
 
 
 @bp.route('/get_selling', methods=['GET'])  # for bar chart
+# @staff_login_required
 def get_selling():
     return jsonify({'status': 'success',
                     'data': testData.selling,  # 顺序很重要！！
