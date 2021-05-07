@@ -479,9 +479,41 @@ def get_customer_orders():
 def get_selling_by_date():
     req = request.json
     print(req)
-    return jsonify({'status': 'success',
-                    'data': random.random() * 100,
-                    'msg': ''})
+    begin = req['date'][0][:10]
+    end = req['date'][1][:10]
+    print(begin, end)
+
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+    WITH purchase_time AS (
+    SELECT class,
+           purchase_date,
+           CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'EC' THEN ECprice
+               WHEN class = 'FC' THEN FCprice
+               END price
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (airline_name, flight_num, date)
+    WHERE purchase_date > %s
+      AND purchase_date < %s)
+SELECT SUM(price) sum
+FROM purchase_time;
+''', (begin, end,))
+            data = cursor.fetchone()
+            print(data)
+
+            return jsonify({'status': 'success',
+                            'data': float(data['sum']),
+                            'msg': ''})
+
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'data': [],
+                        'msg': err.args[1]})
 
 
 @bp.route('/get_selling_statistics', methods=['GET'])
