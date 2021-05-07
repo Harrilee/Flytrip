@@ -30,7 +30,7 @@ def order():  # agent和customer共用接口
 
 
 @bp.route('/get_status_staff', methods=['GET'])
-# @staff_login_required
+@staff_login_required
 def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所有status的数据
     print(session)
     req = request.json
@@ -62,7 +62,7 @@ def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所�
 
 
 @bp.route('/set_status_staff', methods=['POST'])
-# @staff_login_required
+@staff_login_required
 def statusStaffChange():
     print(session)
     req = request.json
@@ -87,7 +87,7 @@ def statusStaffChange():
 
 
 @bp.route('/get_passengers', methods=['POST'])
-# @staff_login_required
+@staff_login_required
 def get_passengers():
     req = request.json
     print(req)
@@ -119,7 +119,7 @@ def get_passengers():
 
 
 @bp.route('/get_passenger_info', methods=['POST'])
-# @staff_login_required
+@staff_login_required
 def get_passenger_info():
     req = request.json
     print(req)
@@ -138,7 +138,7 @@ def get_passenger_info():
 
 
 @bp.route('/admin/import_data', methods=['POST'])
-# @admin_login_required
+@admin_login_required
 def import_data():
     try:
         init_db()
@@ -148,7 +148,7 @@ def import_data():
 
 
 @bp.route('/admin/clear', methods=['POST'])
-# @admin_login_required
+@admin_login_required
 def clear():
     try:
         clear_db()
@@ -158,7 +158,7 @@ def clear():
 
 
 @bp.route('/new_flight', methods=['POST'])
-# @staff_login_required
+@staff_login_required
 def addNewFlight():
     print(session)
     req = request.json
@@ -191,7 +191,7 @@ def addNewFlight():
 
 
 @bp.route('/new_plane', methods=['POST'])
-# @staff_login_required
+@staff_login_required
 def addNewPlane():
     req = request.json
     db = get_db()
@@ -218,7 +218,7 @@ def addNewPlane():
 
 
 @bp.route('/new_airport', methods=['POST'])
-# @staff_login_required
+@staff_login_required
 def addNewAirport():
     req = request.json
     db = get_db()
@@ -238,7 +238,7 @@ def addNewAirport():
 
 
 @bp.route('/get_selling', methods=['GET'])  # for bar chart
-# @staff_login_required
+@staff_login_required
 def get_selling():
     try:
         db = get_db()
@@ -283,7 +283,7 @@ GROUP BY DATE_FORMAT(date, '%b')
 
 
 @bp.route('/get_top_customer', methods=['GET'])  # for staff
-# @staff_login_required
+@staff_login_required
 def get_top_customer():
     try:
         db = get_db()
@@ -337,7 +337,7 @@ LIMIT 5;
 
 
 @bp.route('/agent_get_top_customer_by_ticket', methods=['GET'])  # for agent
-# @agent_login_required
+@agent_login_required
 def get_top_customer_ticket():
     try:
         db = get_db()
@@ -366,7 +366,7 @@ LIMIT 5;
 
 
 @bp.route('/agent_get_top_customer_by_commission', methods=['GET'])  # for agent
-# @agent_login_required
+@agent_login_required
 def get_top_customer_commission():
     return jsonify({'status': 'success',
                     'data': testData.top_customer_commission,
@@ -374,6 +374,7 @@ def get_top_customer_commission():
 
 
 @bp.route('/get_top_agents', methods=['GET'])
+@staff_login_required
 def get_top_agents():
     return jsonify({'status': 'success',
                     'data': {'year_tickets': testData.top_agent,
