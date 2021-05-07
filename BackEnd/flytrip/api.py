@@ -41,7 +41,7 @@ def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所�
             cursor.execute("SELECT * FROM airline_staff WHERE username = %s;", (session['username'],))
             airline = cursor.fetchone()['airline_name']
             cursor.execute(
-                "SELECT arrival_airport, departure_airport, arrival_time, departure_time, status, airline_name airline, date FROM flight WHERE airline_name = %s;",
+                "SELECT flight_num, arrival_airport, departure_airport, arrival_time, departure_time, status, airline_name airline, date FROM flight WHERE airline_name = %s;",
                 (airline,))
             data = cursor.fetchall()
             print(data)
