@@ -1,6 +1,5 @@
 import datetime
 import random
-import sys
 
 from . import testData
 from .auth import *
@@ -340,9 +339,30 @@ LIMIT 5;
 @bp.route('/agent_get_top_customer_by_ticket', methods=['GET'])  # for agent
 # @agent_login_required
 def get_top_customer_ticket():
-    return jsonify({'status': 'success',
-                    'data': testData.top_customer_ticket,
-                    'msg': ''})
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+SELECT COUNT(*) ticket,  CONCAT(firstname, ' ', lastname) AS name, email
+FROM ticket
+         JOIN purchases USING (ticket_id),
+     customer
+WHERE customer.email = purchases.customer_email
+GROUP BY email
+ORDER BY ticket DESC 
+LIMIT 5;
+''')
+            data = cursor.fetchall()
+            # for each in data:
+            #     each['spending'] = int(each['spending'])
+            return jsonify({'status': 'success',
+                            'data': data,
+                            'msg': ''})
+
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'data': [],
+                        'msg': err.args[1]})
 
 
 @bp.route('/agent_get_top_customer_by_commission', methods=['GET'])  # for agent
