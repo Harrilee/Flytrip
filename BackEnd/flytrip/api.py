@@ -53,12 +53,10 @@ def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所�
                         'dataSource': data})
     except pymysql.Error as err:
         return jsonify({'status': 'failed',
-                        'msg': err.args[1],
-                        'dataSource': testData.statusDataSource})
+                        'msg': err.args[1],})
     except:
         return jsonify({'status': 'failed',
-                        'msg': 'Unknown error',
-                        'dataSource': testData.statusDataSource})
+                        'msg': 'Unknown error',})
 
 
 @bp.route('/set_status_staff', methods=['POST'])
