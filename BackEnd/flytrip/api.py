@@ -40,8 +40,11 @@ def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所�
         with db.cursor() as cursor:
             cursor.execute("SELECT * FROM airline_staff WHERE username = %s;", (session['username'],))
             airline = cursor.fetchone()['airline_name']
-            cursor.execute("SELECT * FROM flight WHERE airline_name = %s;", (airline,))
+            cursor.execute(
+                "SELECT arrival_airport, departure_airport, arrival_time, departure_time, status, airline_name airline, date FROM flight WHERE airline_name = %s;",
+                (airline,))
             data = cursor.fetchall()
+            print(data)
             for index, item in enumerate(data):
                 item['key'] = index
                 item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
@@ -53,10 +56,10 @@ def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所�
                         'dataSource': data})
     except pymysql.Error as err:
         return jsonify({'status': 'failed',
-                        'msg': err.args[1],})
+                        'msg': err.args[1]})
     except:
         return jsonify({'status': 'failed',
-                        'msg': 'Unknown error',})
+                        'msg': 'Unknown error'})
 
 
 @bp.route('/set_status_staff', methods=['POST'])
@@ -602,7 +605,9 @@ def search_flight():
     if request.args.get('action') == 'getTickets':  # Guest（非登录）查看所有票
         date = request.args.get('date')
         date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000) - 28800).date()
-        stat = "SELECT * FROM ticket NATURAL JOIN flight NATURAL JOIN airport NATURAL JOIN airplane WHERE status = 'upcoming' AND DATE = %s"
+        stat = "SELECT * FROM ticket NATURAL JOIN flight JOIN airport a ON flight.arrival_airport = a.airport_name" \
+               " JOIN airport b ON flight.departure_airport = b.airport_name NATURAL JOIN airplane WHERE status = 'upcoming'" \
+               " AND DATE = %s"
         print(date)
         fr = request.args.get('from')
         to = request.args.get('to')
@@ -617,7 +622,7 @@ def search_flight():
             stat += " AND arrival_airport IN (SELECT airport_name FROM airport WHERE airport_city = %s)"
         else:
             stat += " AND arrival_airport = %s"
-        print('stat',stat)
+        print('stat', stat)
         with db.cursor() as cursor:
             cursor.execute(stat, (date, fr, to,))
             result = cursor.fetchall()
@@ -659,11 +664,12 @@ def search_flight():
             item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
 
             ret.append(item)
-        print(ret)
+            print(ret)
 
-        # todo: 这里做模糊搜索吧，如果缺少（部分）信息，则返回全部信息（比如，若航班号和日期均为空，则返回所有可售航班）
-        return jsonify({'status': 'success',
-                        'dataSource': result})
+            # todo: 这里做模糊搜索吧，如果缺少（部分）信息，则返回全部信息（比如，若航班号和日期均为空，则返回所有可售航班）
+            return jsonify({'status': 'success',
+                            'dataSource': result})
+
     elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
         # todo: 这个也做模糊搜索吧，类似上面
         return jsonify({'status': 'success',
