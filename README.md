@@ -83,7 +83,7 @@ The following
     - setup.cfg - *configuration file*
         
 ## Use Cases
-Please refer to [USE_CASES_AND_QUERIES.md](USE_CASES_AND_QUERIES.md)
+Please refer to [USE_CASES_AND_QUERIES.md](./USE_CASES_AND_QUERIES.md)
 
 ## Work Distribution
 
@@ -98,3 +98,4 @@ Zihang Xia:
 - Back end development
 - Front end bug hunting
 - Database development
+![img.png](img.png)

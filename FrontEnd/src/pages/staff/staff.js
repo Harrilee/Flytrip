@@ -1154,7 +1154,7 @@ function Statistics() {
             return (
                 <Card bordered={false}>
                     <Row>
-                        <Col span={6}>
+                        <Col span={8}>
                             <Statistic
                                 title="Selling"
                                 value={selling}
@@ -1165,7 +1165,7 @@ function Statistics() {
                         <Col span={4} align={'end'}>
                             Range:&nbsp;
                         </Col>
-                        <Col span={14} align={'end'}>
+                        <Col span={12} align={'end'}>
                             <DatePicker.RangePicker style={{transform: 'translateY(-5px)'}} defaultValue={moment()}
                                         onChange={date => {
                                             fetch('http://localhost:5000/api/get_selling_by_date', {
