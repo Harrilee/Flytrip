@@ -585,7 +585,7 @@ def search_flight():
             stat += " AND arrival_airport IN (SELECT airport_name FROM airport WHERE airport_city = %s)"
         else:
             stat += " AND arrival_airport = %s"
-
+        print('stat',stat)
         with db.cursor() as cursor:
             cursor.execute(stat, (date, fr, to,))
             result = cursor.fetchall()
@@ -613,11 +613,11 @@ def search_flight():
             print('a')
             for i in remaining:
                 if i['class'] == 'BC':
-                    remain['BC'] = i['count']
+                    remain['BC'] = i['COUNT']
                 if i['class'] == 'EC':
-                    remain['EC'] = i['count']
+                    remain['EC'] = i['COUNT']
                 if i['class'] == 'FC':
-                    remain['FC'] = i['count']
+                    remain['FC'] = i['COUNT']
 
             item['FCSellable'] = remain['FC'] < item['FCseats']
             item['BCSellable'] = remain['BC'] < item['BCseats']
