@@ -135,7 +135,7 @@ function Tickets() {
                                         <div className={'airports'}>
                                             <Row align={'middle'} justify={'bottomCenter'}>
                                                 <Col span={11} style={{textAlign: 'right'}}>
-                                                    {d.depart_airport}
+                                                    {d.departure_city + ' | ' + d.departure_airport}
                                                 </Col>
                                                 <Col span={2}>
                                                     <div style={{
@@ -145,7 +145,7 @@ function Tickets() {
                                                     }}/>
                                                 </Col>
                                                 <Col span={11} style={{textAlign: 'left'}}>
-                                                    {d.arrive_airport}
+                                                    {d.arrival_airport + ' | ' + d.arrival_city}
                                                 </Col>
                                             </Row>
                                         </div>
@@ -250,7 +250,7 @@ function UpcomingFlights() {
                                             <div className={'airports'}>
                                                 <Row align={'middle'} justify={'bottomCenter'}>
                                                     <Col span={11} style={{textAlign: 'right'}}>
-                                                        {d.depart_airport}
+                                                        {d.departure_city + ' | ' + d.departure_airport}
                                                     </Col>
                                                     <Col span={2}>
                                                         <div style={{
@@ -260,7 +260,7 @@ function UpcomingFlights() {
                                                         }}/>
                                                     </Col>
                                                     <Col span={11} style={{textAlign: 'left'}}>
-                                                        {d.arrive_airport}
+                                                        {d.arrival_airport + ' | ' + d.arrival_city}
                                                     </Col>
                                                 </Row>
                                             </div>

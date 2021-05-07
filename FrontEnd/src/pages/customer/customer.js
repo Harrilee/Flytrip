@@ -206,7 +206,7 @@ function Tickets() {
                                         <div className={'airports'}>
                                             <Row align={'middle'} justify={'bottomCenter'}>
                                                 <Col span={11} style={{textAlign: 'right'}}>
-                                                    {d.depart_airport}
+                                                    {d.departure_city + ' | ' + d.departure_airport}
                                                 </Col>
                                                 <Col span={2}>
                                                     <div style={{
@@ -216,7 +216,7 @@ function Tickets() {
                                                     }}/>
                                                 </Col>
                                                 <Col span={11} style={{textAlign: 'left'}}>
-                                                    {d.arrive_airport}
+                                                    {d.arrival_airport + ' | ' + d.arrival_city}
                                                 </Col>
                                             </Row>
                                         </div>
@@ -278,7 +278,7 @@ function UpcomingFlights() {
                 <div style={{margin: 'auto', maxWidth: '1000px'}}>
                     <Form style={{padding: '20px', border: 'lightgrey solid 1px', borderRadius: '2px'}}
                           onFinish={(form) => {
-                              let url = 'http://http://localhost:5000/api/search?'
+                              let url = 'http://localhost:5000/api/search?'
                               url += 'action=getStatus'
                               Object.keys(form).forEach(key => {
                                   url += '&' + key + '=' + form[key]
@@ -342,7 +342,7 @@ function UpcomingFlights() {
                                             <div className={'airports'}>
                                                 <Row align={'middle'} justify={'bottomCenter'}>
                                                     <Col span={11} style={{textAlign: 'right'}}>
-                                                        {d.depart_airport}
+                                                        {d.departure_city + ' | ' + d.departure_airport}
                                                     </Col>
                                                     <Col span={2}>
                                                         <div style={{
@@ -352,7 +352,7 @@ function UpcomingFlights() {
                                                         }}/>
                                                     </Col>
                                                     <Col span={11} style={{textAlign: 'left'}}>
-                                                        {d.arrive_airport}
+                                                        {d.arrival_airport + ' | ' + d.arrival_city}
                                                     </Col>
                                                 </Row>
                                             </div>
@@ -470,7 +470,7 @@ function MyOrders() {
                                     <div className={'airports'}>
                                         <Row align={'middle'} justify={'bottomCenter'}>
                                             <Col span={11} style={{textAlign: 'right'}}>
-                                                {d.depart_airport}
+                                                {d.departure_city + ' | ' + d.departure_airport}
                                             </Col>
                                             <Col span={2}>
                                                 <div style={{
@@ -480,7 +480,7 @@ function MyOrders() {
                                                 }}/>
                                             </Col>
                                             <Col span={11} style={{textAlign: 'left'}}>
-                                                {d.arrive_airport}
+                                                {d.arrival_airport + ' | ' + d.arrival_city}
                                             </Col>
                                         </Row>
                                     </div>

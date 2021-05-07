@@ -166,7 +166,7 @@ function Tickets() {
                 <div style={{margin: 'auto', maxWidth: '1000px'}}>
                     <Form style={{padding: '20px', border: 'lightgrey solid 1px', borderRadius: '2px'}}
                           onFinish={(form) => {
-                              let url = 'http://http://localhost:5000/api/search?'
+                              let url = 'http://localhost:5000/api/search?'
                               url += 'action=getTickets'
                               Object.keys(form).forEach(key => {
                                   url += '&' + key + '=' + form[key]
@@ -175,7 +175,12 @@ function Tickets() {
                               fetch(url)
                                   .then((resp) => resp.json())
                                   .then(data => {
-                                      setDataSource(data.dataSource)
+                                      if (data.status === 'failed') {
+                                          console.log(1)
+                                          message.error('Failed to return a valid response.\n' + data.msg)
+                                      } else {
+                                          setDataSource(data.dataSource)
+                                      }
                                   })
                           }}>
                         <Row gutter={32}>
@@ -240,7 +245,7 @@ function Tickets() {
                                         <div className={'airports'}>
                                             <Row align={'middle'} justify={'bottomCenter'}>
                                                 <Col span={11} style={{textAlign: 'right'}}>
-                                                    {d.depart_airport}
+                                                    {d.departure_city + ' | ' + d.departure_airport}
                                                 </Col>
                                                 <Col span={2}>
                                                     <div style={{
@@ -250,7 +255,7 @@ function Tickets() {
                                                     }}/>
                                                 </Col>
                                                 <Col span={11} style={{textAlign: 'left'}}>
-                                                    {d.arrive_airport}
+                                                    {d.arrival_airport + ' | ' + d.arrival_city}
                                                 </Col>
                                             </Row>
                                         </div>
@@ -312,7 +317,7 @@ function UpcomingFlights() {
                 <div style={{margin: 'auto', maxWidth: '1000px'}}>
                     <Form style={{padding: '20px', border: 'lightgrey solid 1px', borderRadius: '2px'}}
                           onFinish={(form) => {
-                              let url = 'http://http://localhost:5000/api/search?'
+                              let url = 'http://localhost:5000/api/search?'
                               url += 'action=getStatus'
                               Object.keys(form).forEach(key => {
                                   url += '&' + key + '=' + form[key]
@@ -321,7 +326,12 @@ function UpcomingFlights() {
                               fetch(url)
                                   .then((resp) => resp.json())
                                   .then(data => {
-                                      setDataSource(data.dataSource)
+                                      if (data.status === 'failed') {
+                                          console.log(1)
+                                          message.error('Failed to return a valid response\n' + data.msg)
+                                      } else {
+                                          setDataSource(data.dataSource)
+                                      }
                                   })
                           }}>
                         <Row gutter={32} justify={'end'}>
@@ -376,7 +386,7 @@ function UpcomingFlights() {
                                             <div className={'airports'}>
                                                 <Row align={'middle'} justify={'bottomCenter'}>
                                                     <Col span={11} style={{textAlign: 'right'}}>
-                                                        {d.depart_airport}
+                                                        {d.departure_city + ' | ' + d.departure_airport}
                                                     </Col>
                                                     <Col span={2}>
                                                         <div style={{
@@ -386,7 +396,7 @@ function UpcomingFlights() {
                                                         }}/>
                                                     </Col>
                                                     <Col span={11} style={{textAlign: 'left'}}>
-                                                        {d.arrive_airport}
+                                                        {d.arrival_airport + ' | ' + d.arrival_city}
                                                     </Col>
                                                 </Row>
                                             </div>
@@ -574,7 +584,7 @@ function ManageStatusCard(props) {
                     <div className={'airports'}>
                         <Row align={'middle'} justify={'bottomCenter'}>
                             <Col span={11} style={{textAlign: 'right'}}>
-                                {d.depart_airport}
+                                {d.departure_city + ' | ' + d.departure_airport}
                             </Col>
                             <Col span={2}>
                                 <div style={{
@@ -584,7 +594,7 @@ function ManageStatusCard(props) {
                                 }}/>
                             </Col>
                             <Col span={11} style={{textAlign: 'left'}}>
-                                {d.arrive_airport}
+                                {d.arrival_airport + ' | ' + d.arrival_city}
                             </Col>
                         </Row>
                     </div>
@@ -663,7 +673,7 @@ function Manage() {
 
 
     function refresh_status(force_refresh = false) {
-        fetch('http://localhost:5000/api/get_status_staff',{credentials: 'include',})
+        fetch('http://localhost:5000/api/get_status_staff', {credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 if (!statusData.loaded || force_refresh) {
@@ -1167,27 +1177,27 @@ function Statistics() {
                         </Col>
                         <Col span={12} align={'end'}>
                             <DatePicker.RangePicker style={{transform: 'translateY(-5px)'}} defaultValue={moment()}
-                                        onChange={date => {
-                                            fetch('http://localhost:5000/api/get_selling_by_date', {
-                                                mode: 'cors',
-                                                method: 'POST',
-                                                headers: {
-                                                    'Content-Type': 'application/json',
-                                                },
-                                                credentials: 'include',
-                                                body: JSON.stringify({date: date})
-                                            }).then(res => {
-                                                return res.json()
-                                            }).then(result => {
-                                                if (result.status === 'success') {
-                                                    setSelling(result.data)
+                                                    onChange={date => {
+                                                        fetch('http://localhost:5000/api/get_selling_by_date', {
+                                                            mode: 'cors',
+                                                            method: 'POST',
+                                                            headers: {
+                                                                'Content-Type': 'application/json',
+                                                            },
+                                                            credentials: 'include',
+                                                            body: JSON.stringify({date: date})
+                                                        }).then(res => {
+                                                            return res.json()
+                                                        }).then(result => {
+                                                            if (result.status === 'success') {
+                                                                setSelling(result.data)
 
-                                                }
-                                                if (result.status === 'failed') {
-                                                    message.error("Error getting passengers.\n" + result.msg)
-                                                }
-                                            });
-                                        }}/>
+                                                            }
+                                                            if (result.status === 'failed') {
+                                                                message.error("Error getting passengers.\n" + result.msg)
+                                                            }
+                                                        });
+                                                    }}/>
                         </Col>
                     </Row>
                 </Card>
@@ -1196,7 +1206,7 @@ function Statistics() {
 
         const [selling, setSelling] = React.useState(null)
         if (!selling) {
-            fetch('http://localhost:5000/api/get_selling_statistics',{credentials: 'include',})
+            fetch('http://localhost:5000/api/get_selling_statistics', {credentials: 'include',})
                 .then((resp) => resp.json())
                 .then(data => {
                     setSelling(data.data);
@@ -1267,7 +1277,7 @@ function Statistics() {
                 render: (text, record) => <StatisticsViewOrders record={record}/>
             }
         ]
-        fetch('http://localhost:5000/api/get_top_customer',{credentials: 'include',})
+        fetch('http://localhost:5000/api/get_top_customer', {credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 if (JSON.stringify(customerStats) !== JSON.stringify(data.data)) {
@@ -1303,7 +1313,7 @@ function Statistics() {
                 key: 'selling'
             },
         ]
-        fetch('http://localhost:5000/api/get_top_agents',{credentials: 'include',})
+        fetch('http://localhost:5000/api/get_top_agents', {credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 if (JSON.stringify(agentStats) !== JSON.stringify(data.data)) {
@@ -1324,7 +1334,7 @@ function Statistics() {
 
     function SellingGraph() {
         const [sellingStats, setSellingStats] = React.useState([])
-        fetch('http://localhost:5000/api/get_selling',{credentials: 'include',})
+        fetch('http://localhost:5000/api/get_selling', {credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 if (JSON.stringify(sellingStats) !== JSON.stringify(data.data)) {
@@ -1383,7 +1393,7 @@ function Statistics() {
     function PieChart() {
         const [sourceData, setSourceData] = React.useState({data: null, loaded: false})
         if (!sourceData.loaded) {
-            fetch('http://localhost:5000/api/get_source',{credentials: 'include',})
+            fetch('http://localhost:5000/api/get_source', {credentials: 'include',})
                 .then((resp) => resp.json())
                 .then(data => {
                     setSourceData({data: data.data, loaded: true});
@@ -1492,7 +1502,7 @@ function Statistics() {
     function Destination() {
         const [sourceData, setSourceData] = React.useState({data: null, loaded: false})
         if (!sourceData.loaded) {
-            fetch('http://localhost:5000/api/get_destination',{credentials: 'include',})
+            fetch('http://localhost:5000/api/get_destination', {credentials: 'include',})
                 .then((resp) => resp.json())
                 .then(data => {
                     setSourceData({data: data.data, loaded: true});
@@ -1502,34 +1512,40 @@ function Statistics() {
             {sourceData.data === null ? <Empty/> : <>
                 <p>Last 3 Months</p>
                 <Row gutter={16}>
-                    <Col span={8} align={'center'}  style={{transform:'translateY(5px)'}}>
-                        <Statistic title="Top 2" value={sourceData.data.threeMonth[1]} prefix={<FireOutlined />} valueStyle={{ color: '#548bfb' }}/>
+                    <Col span={8} align={'center'} style={{transform: 'translateY(5px)'}}>
+                        <Statistic title="Top 2" value={sourceData.data.threeMonth[1]} prefix={<FireOutlined/>}
+                                   valueStyle={{color: '#548bfb'}}/>
                     </Col>
                     <Col span={8} align={'center'}>
-                        <Statistic title="Top 1" value={sourceData.data.threeMonth[0]} prefix={<FireOutlined />} valueStyle={{ color: '#cf1322' }}/>
+                        <Statistic title="Top 1" value={sourceData.data.threeMonth[0]} prefix={<FireOutlined/>}
+                                   valueStyle={{color: '#cf1322'}}/>
                     </Col>
-                    <Col span={8} align={'center'}  style={{transform:'translateY(5px)'}}>
-                        <Statistic title="Top 3" value={sourceData.data.threeMonth[2]} prefix={<FireOutlined />} valueStyle={{ color: '#548bfb' }}/>
+                    <Col span={8} align={'center'} style={{transform: 'translateY(5px)'}}>
+                        <Statistic title="Top 3" value={sourceData.data.threeMonth[2]} prefix={<FireOutlined/>}
+                                   valueStyle={{color: '#548bfb'}}/>
                     </Col>
                 </Row>
                 <br/>
                 <br/>
                 <p>Last Year</p>
                 <Row gutter={16}>
-                    <Col span={8} align={'center'}  style={{transform:'translateY(5px)'}}>
-                        <Statistic title="Top 2" value={sourceData.data.year[1]} prefix={<FireOutlined />} valueStyle={{ color: '#548bfb' }} />
+                    <Col span={8} align={'center'} style={{transform: 'translateY(5px)'}}>
+                        <Statistic title="Top 2" value={sourceData.data.year[1]} prefix={<FireOutlined/>}
+                                   valueStyle={{color: '#548bfb'}}/>
                     </Col>
                     <Col span={8} align={'center'}>
-                        <Statistic title="Top 1" value={sourceData.data.year[0]} prefix={<FireOutlined />} valueStyle={{ color: '#cf1322' }}/>
+                        <Statistic title="Top 1" value={sourceData.data.year[0]} prefix={<FireOutlined/>}
+                                   valueStyle={{color: '#cf1322'}}/>
                     </Col>
-                    <Col span={8} align={'center'}  style={{transform:'translateY(5px)'}}>
-                        <Statistic title="Top 3" value={sourceData.data.year[2]} prefix={<FireOutlined />} valueStyle={{ color: '#548bfb' }} />
+                    <Col span={8} align={'center'} style={{transform: 'translateY(5px)'}}>
+                        <Statistic title="Top 3" value={sourceData.data.year[2]} prefix={<FireOutlined/>}
+                                   valueStyle={{color: '#548bfb'}}/>
                     </Col>
                 </Row>
                 <br/>
             </>
 
-                }
+            }
         </Card>)
     }
 

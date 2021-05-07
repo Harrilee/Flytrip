@@ -57,7 +57,8 @@ def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所�
     except pymysql.Error as err:
         return jsonify({'status': 'failed',
                         'msg': err.args[1]})
-    except:
+    except Exception as e:
+        print('exception:', e, data)
         return jsonify({'status': 'failed',
                         'msg': 'Unknown error'})
 
@@ -467,10 +468,11 @@ LIMIT 5;
                         'msg': err.args[1]})
 
 
-@bp.route('/get_customer_orders', methods=['POST'])
+@bp.route('/get_customer_orders', methods=['POST'])  # for staff
 def get_customer_orders():
     req = request.json
     print(req)
+
     return jsonify({'status': 'success',
                     'data': testData.orderHistoryCustomer,
                     'msg': ''})
@@ -604,30 +606,41 @@ def search_flight():
     print(request.args)
     if request.args.get('action') == 'getTickets':  # Guest（非登录）查看所有票
         date = request.args.get('date')
-        date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000) - 28800).date()
-        stat = "SELECT * FROM ticket NATURAL JOIN flight JOIN airport a ON flight.arrival_airport = a.airport_name" \
-               " JOIN airport b ON flight.departure_airport = b.airport_name NATURAL JOIN airplane WHERE status = 'upcoming'" \
-               " AND DATE = %s"
-        print(date)
+        try:
+            date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000) - 28800).date()
+        except ValueError:
+            return jsonify({'status': 'failed',
+                            'dataSource': [],
+                            'msg': 'Please enter the date.'})
         fr = request.args.get('from')
         to = request.args.get('to')
         db = get_db()
-        cities = get_cities()
-        if fr in cities:
-            stat += " AND departure_airport IN (SELECT airport_name FROM airport WHERE airport_city = %s)"
-        else:
-            stat += " AND departure_airport = %s"
+        cursor = db.cursor()
+        cursor.execute("""
+            SELECT airplane_id,
+                   airline_name,
+                   date,
+                   flight.departure_airport as departure_airport,
+                   d_airport.airport_city   as departure_city,
+                   a_airport.airport_city   as arrival_city,
+                   a_airport.airport_name   as arrival_airport,
+                   FCprice,
+                   BCprice,
+                   ECprice,
+                   departure_time,
+                   arrival_time,
+                   flight_num
+            from flight
+                     JOIN airport AS d_airport
+                     JOIN airport AS a_airport
+            WHERE flight.departure_airport = d_airport.airport_name
+              AND flight.arrival_airport = a_airport.airport_name
+              AND date = %s
+              AND (upper(%s) = upper(d_airport.airport_name) OR upper(%s) = upper(d_airport.airport_city))
+              AND (upper(%s)= upper(a_airport.airport_name) OR upper(%s) = upper(a_airport.airport_city))
+        """, (date, fr, fr, to, to))
 
-        if to in cities:
-            stat += " AND arrival_airport IN (SELECT airport_name FROM airport WHERE airport_city = %s)"
-        else:
-            stat += " AND arrival_airport = %s"
-        print('stat', stat)
-        with db.cursor() as cursor:
-            cursor.execute(stat, (date, fr, to,))
-            result = cursor.fetchall()
-        print(result)
-        ret = []
+        result = cursor.fetchall()
         for index, item in enumerate(result):
             item['key'] = index
             item['airline'] = item['airline_name']
@@ -639,38 +652,67 @@ def search_flight():
             item['ECprice'] = int(item['ECprice'])
             item['BCprice'] = int(item['BCprice'])
             item['FCprice'] = int(item['FCprice'])
-            remain = {}
-
-            with db.cursor() as cursor:
-                cursor.execute(
-                    "SELECT COUNT(ticket_id) COUNT, class FROM ticket WHERE airline_name = %s AND flight_num = %s GROUP BY class;",
-                    (item['airline_name'], item['flight_num'],))
-                remaining = cursor.fetchall()
-            print(remaining)
-            print('a')
-            for i in remaining:
-                if i['class'] == 'BC':
-                    remain['BC'] = i['COUNT']
-                if i['class'] == 'EC':
-                    remain['EC'] = i['COUNT']
-                if i['class'] == 'FC':
-                    remain['FC'] = i['COUNT']
-
-            item['FCSellable'] = remain['FC'] < item['FCseats']
-            item['BCSellable'] = remain['BC'] < item['BCseats']
-            item['ECSellable'] = remain['EC'] < item['ECseats']
-
-            item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
-            item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
-
-            ret.append(item)
-            print(ret)
-
-            # todo: 这里做模糊搜索吧，如果缺少（部分）信息，则返回全部信息（比如，若航班号和日期均为空，则返回所有可售航班）
-            return jsonify({'status': 'success',
-                            'dataSource': result})
+            delta = item['arrival_time'] - item['departure_time']
+            item['durationHour'] = (delta.days * 86400 + delta.seconds) // 3600
+            item['durationMin'] = (delta.days * 86400 + delta.seconds) % 3600 // 60
+            item['date'] = item['date'].isoformat()
+            item['arrival_time'] = item['arrival_time'].strftime('%H:%M')
+            item['departure_time'] = item['departure_time'].strftime('%H:%M')
+            item['flight_num'] = item['flight_num']
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute('''
+                    WITH sold_ticket_info AS (
+                        SELECT COUNT(class) as sold_tickets, class
+                        FROM ticket
+                        WHERE airline_name = %s
+                          AND flight_num = %s
+                          AND date = %s
+                        GROUP BY class
+                    ),
+                         available_ticket_info_temp AS (
+                             SELECT ECseats, FCseats, BCseats
+                             FROM airplane
+                                      JOIN flight USING (airplane_id, airline_name)
+                             WHERE airline_name = %s
+                               AND flight_num = %s
+                               AND date = %s
+                         ),
+                         available_ticket_info AS (
+                             SELECT 'EC' as class, ECseats as available
+                             FROM available_ticket_info_temp
+                             UNION
+                             SELECT 'BC' as class, BCseats as available
+                             FROM available_ticket_info_temp
+                             UNION
+                             SELECT 'FC' as class, FCseats as available
+                             FROM available_ticket_info_temp
+                         )
+                    SELECT class, sold_tickets<available as soldable
+                    FROM available_ticket_info NATURAL JOIN sold_ticket_info
+                    ''', (item['airline'], item['flight_num'], date, item['airline'], item['flight_num'], date))
+            available_info = cursor.fetchall()
+            for each in available_info:
+                if each['class'] == 'FC':
+                    item['FCSellable'] = True if each['soldable'] else False
+                elif each['class'] == 'EC':
+                    item['ECSellable'] = True if each['soldable'] else False
+                elif each['class'] == 'BC':
+                    item['BCSellable'] = True if each['soldable'] else False
+            if 'FCSellable' not in item:
+                item['FCSellable'] = True
+            if 'ECSellable' not in item:
+                item['ECSellable'] = True
+            if 'BCSellable' not in item:
+                item['BCSellable'] = True
+        # todo: 这里做模糊搜索吧，如果缺少（部分）信息，则返回全部信息（比如，若航班号和日期均为空，则返回所有可售航班）
+        return jsonify({'status': 'success', 'dataSource': result})
 
     elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
         # todo: 这个也做模糊搜索吧，类似上面
         return jsonify({'status': 'success',
                         'dataSource': testData.statusDataSource})
+    else:
+        return jsonify({'status': 'failed',
+                        'dataSource': [],
+                        'msg': 'No result found'})
