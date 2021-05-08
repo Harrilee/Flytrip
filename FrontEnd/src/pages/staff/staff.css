@@ -82,7 +82,10 @@
 .delayed{
   color: #f5222d;
 }
-.in_progress{
+.cancelled{
+  color: #f5222d;
+}
+.in-progress{
   color: #1890ff;
 }
 .card{

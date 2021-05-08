@@ -641,6 +641,8 @@ function ManageStatusCard(props) {
                                            className={'delayed'}>delayed</Select.Option>
                             <Select.Option value="upcoming">upcoming</Select.Option>
                             <Select.Option value="arrived">arrived</Select.Option>
+                            <Select.Option value="in-progress">in-progress</Select.Option>
+                            <Select.Option value="cancelled">cancelled</Select.Option>
                         </Select>
                     </div>
                 </Col>
@@ -669,6 +671,8 @@ function Manage() {
         {label: 'Delayed', value: 'delayed'},
         {label: 'Upcoming', value: 'upcoming'},
         {label: 'Arrived', value: 'arrived'},
+        {label: 'In-progress', value: 'in-progress'},
+        {label: 'Cancelled', value: 'cancelled'},
     ];
 
 
@@ -707,7 +711,7 @@ function Manage() {
                         <div>
 
                             <Row gutter={16}>
-                                <Col span={12}>
+                                <Col span={18}>
                                     <Checkbox.Group value={statusData.filterOptions} options={filterOptions}
                                                     defaultValue={['upcoming']}
                                                     onChange={val => {
@@ -724,7 +728,7 @@ function Manage() {
                                                         })
                                                     }}/>
                                 </Col>
-                                <Col span={12} align={'end'}>
+                                <Col span={6} align={'end'}>
                                     <DatePicker.RangePicker value={statusData.range}
                                                             style={{transform: 'translateY(-5px)'}} onChange={range => {
                                         setStatusData({
