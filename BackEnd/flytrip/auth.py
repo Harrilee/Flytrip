@@ -248,7 +248,7 @@ def login():
                 return jsonify({
                     'status': 'success',
                     'user_type': user_type,
-                    'username': user['name']
+                    'username': user['firstname'] + ' ' + user['lastname']
                 })
 
             return jsonify({

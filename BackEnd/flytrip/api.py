@@ -1,5 +1,4 @@
 import datetime
-import random
 
 from . import testData
 from .auth import *
@@ -20,7 +19,9 @@ def purchase():
 def order():  # agent和customer共用接口
     req = request.json
     print(req)
+    print(session)
     if session['user_type'] == 'customer':
+        email = session['email']
         return jsonify({'status': 'success', 'data': testData.orderHistoryCustomer})
 
     elif session['user_type'] == 'agent':
@@ -49,7 +50,7 @@ SELECT flight_num,
        departure_time,
        status,
        airline_name            airline,
-        date_format(date, '%%Y-%%m-%%d') date
+        DATE_FORMAT(date, '%%Y-%%m-%%d') date
 FROM flight
 WHERE airline_name = %s;''',
                 (airline,))
@@ -556,7 +557,7 @@ FROM total_sum;
             ''')
             total = cursor.fetchone()
             print(total)
-            print('*'*100)
+            print('*' * 100)
             total = float(total['total'])
             cursor.execute('''
 WITH year_sum AS (
@@ -604,14 +605,57 @@ FROM year_sum;
 
 @bp.route('/get_source', methods=['GET'])
 def get_source():
-    return jsonify({'status': 'success',
-                    'data': {
-                        'direct_year': random.random() * 10000,
-                        'indirect_year': random.random() * 10000,
-                        'direct_month': random.random() * 10000,
-                        'indirect_month': random.random() * 10000,
-                    },
-                    'msg': ''})
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+    WITH total_sum AS (
+    SELECT booking_agent_id,
+           CASE
+               WHEN ticket.class = 'EC' THEN ECprice
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               END price
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (airline_name, flight_num)
+    WHERE purchase_date > DATE_SUB(NOW(), INTERVAL 1 YEAR)
+)
+SELECT IFNULL(SUM(IF(booking_agent_id IS NOT NULL, 0, price)),0) direct_year,
+       IFNULL(SUM(IF(booking_agent_id IS NULL, 0, price)),0)     indirect_year
+FROM total_sum;
+''')
+            year = cursor.fetchone()
+            print(year)
+            cursor.execute('''
+                WITH total_sum AS (
+                SELECT booking_agent_id,
+                       CASE
+                           WHEN ticket.class = 'EC' THEN ECprice
+                           WHEN class = 'BC' THEN BCprice
+                           WHEN class = 'FC' THEN FCprice
+                           END price
+                FROM purchases
+                         JOIN ticket USING (ticket_id)
+                         JOIN flight USING (airline_name, flight_num)
+                WHERE purchase_date > DATE_SUB(NOW(), INTERVAL 1 MONTH)
+            )
+            SELECT IFNULL(SUM(IF(booking_agent_id IS NOT NULL, 0, price)),0) direct_month,
+                   IFNULL(SUM(IF(booking_agent_id IS NULL, 0, price)),0)     indirect_month
+            FROM total_sum;
+            ''')
+            month = cursor.fetchone()
+        return jsonify({'status': 'success',
+                        'data': {
+                            'direct_year': float(year['direct_year']),
+                            'indirect_year': float(year['indirect_year']),
+                            'direct_month': float(month['direct_month']),
+                            'indirect_month': float(month['indirect_month'])
+                        },
+                        'msg': ''})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
 
 
 @bp.route('/get_destination', methods=['GET'])
