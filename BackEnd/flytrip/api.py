@@ -538,13 +538,68 @@ FROM purchase_time;
 
 @bp.route('/get_selling_statistics', methods=['GET'])
 def get_selling_statistics():
-    return jsonify({'status': 'success',
-                    'data': {
-                        'total': random.random() * 100,
-                        'year': random.random() * 100,
-                        'month': random.random() * 100
-                    },
-                    'msg': ''})
+    try:
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+WITH total_sum AS (
+    SELECT CASE
+               WHEN ticket.class = 'EC' THEN ECprice
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               END price
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (airline_name, flight_num))
+SELECT IFNULL(SUM(price),0) total
+FROM total_sum;
+            ''')
+            total = cursor.fetchone()
+            print(total)
+            print('*'*100)
+            total = float(total['total'])
+            cursor.execute('''
+WITH year_sum AS (
+    SELECT CASE
+               WHEN ticket.class = 'EC' THEN ECprice
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               END price
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (airline_name, flight_num)
+    WHERE purchase_date > DATE_SUB(NOW(), INTERVAL 1 YEAR))
+SELECT IFNULL(SUM(price),0) total
+FROM year_sum;            
+            ''')
+            year = cursor.fetchone()
+            year = float(year['total'])
+            cursor.execute('''
+            WITH month_sum AS (
+                SELECT CASE
+                           WHEN ticket.class = 'EC' THEN ECprice
+                           WHEN class = 'BC' THEN BCprice
+                           WHEN class = 'FC' THEN FCprice
+                           END price
+                FROM purchases
+                         JOIN ticket USING (ticket_id)
+                         JOIN flight USING (airline_name, flight_num)
+                WHERE purchase_date > DATE_SUB(NOW(), INTERVAL 1 MONTH))
+            SELECT IFNULL(SUM(price),0) total
+            FROM month_sum;            
+                        ''')
+            month = cursor.fetchone()
+            month = float(month['total'])
+        return jsonify({'status': 'success',
+                        'data': {
+                            'total': total,
+                            'year': year,
+                            'month': month
+                        },
+                        'msg': ''})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
 
 
 @bp.route('/get_source', methods=['GET'])
