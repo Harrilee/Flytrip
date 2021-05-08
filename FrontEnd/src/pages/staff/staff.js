@@ -344,9 +344,9 @@ function UpcomingFlights() {
                             </Col>
                             <Col span={10}>
                                 <Form.Item
-                                    name={'date'}
-                                    label={"Date"}>
-                                    <DatePicker style={{width: '100%'}}/>
+                                    name={'airline'}
+                                    label={"Airline"}>
+                                    <Input/>
                                 </Form.Item>
                             </Col>
                             <Col span={4}>
