@@ -105,8 +105,8 @@ def order():  # agent和customer共用接口
                     item['price'] = float(item['price'])
                     item['departure_city'] = get_city_from_airport(item['departure_airport'])
                     item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
-                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
-                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
+                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
                     item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
                     item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
                     item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
@@ -147,8 +147,8 @@ WHERE booking_agent.email = %s;
                     item['price'] = float(item['price'])
                     item['departure_city'] = get_city_from_airport(item['departure_airport'])
                     item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
-                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
-                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
+                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
                     item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
                     item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
                     item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
@@ -190,12 +190,14 @@ WHERE airline_name = %s;''',
             data = cursor.fetchall()
             for index, item in enumerate(data):
                 item['key'] = index
-                item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
-                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+                item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
+                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
                 item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
                 item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
                 item['depart_city'] = get_city_from_airport(item['departure_airport'])
                 item['departure_city'] = get_city_from_airport(item['departure_airport'])
+                item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
+                item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
             print(data)
 
         return jsonify({'status': 'success',
@@ -331,6 +333,7 @@ def addNewFlight():
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
                 (airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time, EC, BC, FC,
                  'upcoming', airplane_id, departure_time[:10]))
+            db.commit()
         return jsonify({'status': 'success',
                         'msg': ''})
     except pymysql.Error as err:
@@ -654,8 +657,8 @@ WHERE customer_email = %s;
                 item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
                 item['depart_airport'] = item['departure_airport']
                 item['arrive_airport'] = item['arrival_airport']
-                item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
-                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+                item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
+                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
                 item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
                 item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
                 item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
@@ -1021,19 +1024,20 @@ SELECT airline_name airline,
        date,
        status
 FROM flight
-WHERE flight_num = 1
-  AND airline_name = 'airline 1'
-                ''')
+WHERE flight_num = %s
+  AND airline_name = %s
+                ''', (flight_num, airline,))
                 data = cursor.fetchall()
                 for index, item in enumerate(data):
                     item['key'] = index
-                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
-                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
-                    item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
-                    item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
+                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
+                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
+                    item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%Y-%m-%d %H:%M')
+                    item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%Y-%m-%d %H:%M')
                     item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
                     item['departure_city'] = get_city_from_airport(item['departure_airport'])
                     item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
+
                 return jsonify({'status': 'success',
                                 'dataSource': data,
                                 'msg': ''})
