@@ -6,32 +6,90 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
 
 ## Guest
 
-1. View Public Info: All users, whether logged in or not, can a. Search for upcoming flights based on source
-   city/airport name, destination city/airport name, date. b. Will be able to see the flights status based on flight
-   number, arrival/departure date.
-   ```sql
+1. View Public Info: All users, whether logged in or not, can
+
+   a. Search for upcoming flights based on source city/airport name, destination city/airport name, date.
+
+   b. Will be able to see the flights status based on flight number, arrival/departure date.
+   ```mysql
+   -- The following query fetches the basic info about the flights
+   SELECT airplane_id,
+          airline_name,
+          date,
+          flight.departure_airport AS departure_airport,
+          d_airport.airport_city   AS departure_city,
+          a_airport.airport_city   AS arrival_city,
+          a_airport.airport_name   AS arrival_airport,
+          FCprice,
+          BCprice,
+          ECprice,
+          departure_time,
+          arrival_time,
+          flight_num
+   FROM flight
+            JOIN airport AS d_airport
+            JOIN airport AS a_airport
+   WHERE flight.departure_airport = d_airport.airport_name
+     AND flight.arrival_airport = a_airport.airport_name
+     AND date = % s
+     AND (UPPER(%s) = UPPER(d_airport.airport_name) OR UPPER(%s) = UPPER(d_airport.airport_city))
+     AND (UPPER(%s) = UPPER(a_airport.airport_name) OR UPPER(%s) = UPPER(a_airport.airport_city));
    
+   -- This query computes whether the specific flights are still available
+   WITH sold_ticket_info AS (
+       SELECT COUNT(class) AS sold_tickets, class
+       FROM ticket
+       WHERE airline_name = % s
+         AND flight_num = % s
+         AND date = % s
+       GROUP BY class
+   ),
+        available_ticket_info_temp AS (
+            SELECT ECseats, FCseats, BCseats
+            FROM airplane
+                     JOIN flight USING (airplane_id, airline_name)
+            WHERE airline_name = % s
+              AND flight_num = % s
+              AND date = % s
+        ),
+        available_ticket_info AS (
+            SELECT 'EC' AS class, ECseats AS available
+            FROM available_ticket_info_temp
+            UNION
+            SELECT 'BC' AS class, BCseats AS available
+            FROM available_ticket_info_temp
+            UNION
+            SELECT 'FC' AS class, FCseats AS available
+            FROM available_ticket_info_temp
+        )
+   SELECT class, sold_tickets < available AS soldable
+   FROM available_ticket_info
+            NATURAL JOIN sold_ticket_info;
    ```
 2. Register: 3 types of user registrations (Customer, Booking agent, Airline Staff) option via forms.
     1. Customer
-   ```sql
+   ```mysql
    INSERT INTO customer(email, firstname, lastname, password, building_number, street, city, state, phone_number,
    passport_number, passport_expiration, passport_country, date_of_birth)
    VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
    ```
     2. Booking Agent
-   ```sql
+   ```mysql
    INSERT INTO booking_agent(email, password, booking_agent_id)
    VALUES(%s, %s, %s)
    ```   
     3. Airline Staff
-   ```sql
+   ```mysql
    INSERT INTO
    airline_staff(username, password, first_name, last_name, date_of_birth, airline_name)
    VALUES(%s, %s, %s, %s, %s, %s)
    ```   
     4. __Admin* (to operate database through front end)__
-
+   ```mysql
+   INSERT INTO
+   airline_staff(username, password, first_name, last_name, date_of_birth, airline_name)
+   VALUES(%s, %s, %s, %s, %s, %s)
+   ```   
 
 3. Login: 3 types of user login (Customer, Booking agent, Airline Staff). User enters their username (email address will
    be used as username), x, and password, y, via forms on login page. This data is sent as POST parameters to the
@@ -43,7 +101,7 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
        home page.
 
     2. If not, login is unsuccessful. A message is displayed indicating this to the user.
-     ```sql
+     ```mysql
      SELECT * FROM customer WHERE email = %s LIMIT 1;
      SELECT * FROM booking_agent WHERE email = %s LIMIT 1;
      SELECT * FROM airline_staff WHERE username = %s LIMIT 1;
