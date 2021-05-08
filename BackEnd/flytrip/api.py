@@ -109,8 +109,8 @@ WHERE booking_agent.email = %s;
         return jsonify({'status': 'failed',
                         'msg': err.args[1]})
 
-    # except KeyError:
-    #     return jsonify({'status': 'failed', 'msg': 'You are not authorized.'})
+    except KeyError:
+        return jsonify({'status': 'failed', 'msg': 'You are not authorized.'})
 
 
 @bp.route('/get_status_staff', methods=['GET'])
@@ -565,13 +565,60 @@ LIMIT 5;
 
 
 @bp.route('/get_customer_orders', methods=['POST'])  # for staff
+@staff_login_required
 def get_customer_orders():
     req = request.json
     print(req)
+    try:
+        email = req['email']
+        db = get_db()
+        with db.cursor() as cursor:
+            cursor.execute('''
+            SELECT flight.date,
+       airline_name                     airline,
+       flight_num,
+       departure_time,
+       departure_airport,
+       arrival_time,
+       arrival_airport,
+       CASE
+           WHEN class = 'BC' THEN BCprice
+           WHEN class = 'EC' THEN ECprice
+           WHEN class = 'FC' THEN FCprice
+           END                          price,
+       purchase_date                    purchase_time,
+       status,
+       customer_email,
+       CONCAT(firstname, ' ', lastname) customer_name
+FROM purchases
+         JOIN ticket USING (ticket_id)
+         JOIN flight USING (flight_num, airline_name)
+         JOIN customer ON purchases.customer_email = customer.email
+WHERE customer_email = %s;
+''', (email,))
+            data = cursor.fetchall()
+            for index, item in enumerate(data):
+                item['key'] = index
+                item['price'] = float(item['price'])
+                item['depart_city'] = get_city_from_airport(item['departure_airport'])
+                item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
+                item['depart_airport'] = item['departure_airport']
+                item['arrive_airport'] = item['arrival_airport']
+                item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
+                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+                item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
+                item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
+                item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
+                item['purchase_time'] = datetime.datetime.strftime(item['purchase_time'], '%Y-%m-%d %H:%M')
+                print(data)
+        return jsonify({'status': 'success', 'data': data})
 
-    return jsonify({'status': 'success',
-                    'data': testData.orderHistoryCustomer,
-                    'msg': ''})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
+
+    except KeyError:
+        return jsonify({'status': 'failed', 'msg': 'You are not authorized.'})
 
 
 @bp.route('/get_selling_by_date', methods=['POST'])
