@@ -98,12 +98,7 @@ VALUES ('airline 1', 1, 1, 'BC', '2021-1-1'),
        ('airline 1', 1, 5, 'BC', '2021-1-1'),
        ('airline 2', 1, 6, 'EC', '2021-1-1'),
        ('airline 2', 1, 7, 'BC', '2021-1-1'),
-       ('airline 2', 1, 8, 'BC', '2021-1-1'),
-       ('airline 2', 1, 9, 'EC', '2021-1-1'),
-       ('airline 2', 1, 10, 'BC', '2021-1-1'),
-       ('airline 1', 1, 11, 'BC', '2021-1-1'),
-       ('airline 1', 1, 12, 'EC', '2021-1-1'),
-       ('airline 1', 1, 13, 'FC', '2021-1-1');
+       ('airline 2', 1, 8, 'BC', '2021-1-1');
 
 INSERT INTO purchases (customer_email, ticket_id, booking_agent_id, purchase_date)
 VALUES ('user1@test.com', 1, NULL, '2021-1-1'),
