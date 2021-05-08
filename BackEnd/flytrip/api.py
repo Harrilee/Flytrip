@@ -454,7 +454,7 @@ GROUP BY DATE_FORMAT(date, '%b')
                     if j['month'] == i['month']:
                         j['selling'] = int(i['selling'])
             curr = datetime.datetime.today().month
-            month = month[5:] + month[:5]
+            month = month[curr:] + month[:curr]
             return jsonify({'status': 'success',
                             'data': month,  # 顺序很重要！！
                             'msg': ''})
