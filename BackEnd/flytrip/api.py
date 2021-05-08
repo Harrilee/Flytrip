@@ -934,7 +934,7 @@ def search_flight():
     if request.args.get('action') == 'getTickets':  # Guest（非登录）查看所有票
         date = request.args.get('date')
         try:
-            date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000) - 28800).date()
+            date = datetime.datetime.utcfromtimestamp(int(int(date) / 1000) + 28800).date()
         except ValueError:
             return jsonify({'status': 'failed',
                             'dataSource': [],
@@ -1038,8 +1038,44 @@ def search_flight():
 
     elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
         # todo: 这个也做模糊搜索吧，类似上面
-        return jsonify({'status': 'success',
-                        'dataSource': testData.statusDataSource})
+        try:
+            flight_num = request.args.get('flight_num')
+            airline = request.args.get('airline')
+
+            db = get_db()
+            with db.cursor() as cursor:
+                cursor.execute('''
+SELECT airline_name airline,
+       flight_num,
+       departure_time,
+       arrival_time,
+       departure_airport,
+       arrival_airport,
+       date,
+       status
+FROM flight
+WHERE flight_num = %s
+  AND airline_name = %s
+                ''', (flight_num, airline,))
+                data = cursor.fetchall()
+                for index, item in enumerate(data):
+                    item['key'] = index
+                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
+                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
+                    item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%Y-%m-%d %H:%M')
+                    item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%Y-%m-%d %H:%M')
+                    item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
+                    item['departure_city'] = get_city_from_airport(item['departure_airport'])
+                    item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
+
+                return jsonify({'status': 'success',
+                                'dataSource': data,
+                                'msg': ''})
+
+        except pymysql.Error as err:
+            return jsonify({'status': 'failed',
+                            'dataSource': [],
+                            'msg': err.args[1]})
     else:
         return jsonify({'status': 'failed',
                         'dataSource': [],
