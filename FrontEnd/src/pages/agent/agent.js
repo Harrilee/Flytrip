@@ -294,7 +294,7 @@ function UpcomingFlights() {
                               Object.keys(form).forEach(key => {
                                   url += '&' + key + '=' + form[key]
                               })
-                              console.log(url)
+                              console.log(form)
                               fetch(url,{credentials: 'include',})
                                   .then((resp) => resp.json())
                                   .then(data => {
@@ -306,7 +306,7 @@ function UpcomingFlights() {
                                 <Form.Item
                                     name={'flight_num'}
                                     label={"Flight Number"}>
-                                    <Input/> {/*todo 后面这些input全部改成mentions，随时返回提示*/}
+                                    <Input/>
                                 </Form.Item>
                             </Col>
                             <Col span={10}>
