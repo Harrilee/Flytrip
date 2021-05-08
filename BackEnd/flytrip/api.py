@@ -10,9 +10,60 @@ bp = Blueprint('api', __name__, url_prefix='/api')
 @bp.route('/purchase', methods=['POST'])
 def purchase():
     req = request.json
-    print(req)
+    print('req', req)
+    print('session', session)
+    try:
+        db = get_db()
+        cursor = db.cursor()
+        # validate if there's still remaining seats
+        cursor.execute('''
+            WITH avaiable_seat as (
+                SELECT {classseats} as avaliable
+                FROM flight
+                         JOIN airplane USING (airline_name, airplane_id)
+                WHERE airline_name = %s
+                  AND flight_num = %s
+                  AND date = %s
+            ),
+                 sold as (
+                     SELECT count(class) as count
+                     FROM ticket
+                     WHERE airline_name = %s
+                       AND flight_num = %s
+                       AND date = %s
+                       AND class = %s
+                 )
+            SELECT sold.count<avaiable_seat.avaliable as soldable
+            FROM sold, avaiable_seat
+        '''.format(classseats=req['ticket_type'] + 'seats'), (req['airline'], req['flight_num'], req['date'],
+                                                              req['airline'], req['flight_num'], req['date'],
+                                                              req['ticket_type']
+                                                              ))
+        if cursor.fetchone()['soldable'] == 0:
+            return jsonify({'status': 'failed', 'msg': 'Sorry, all tickets are sold out.'})
+        else:
+            cursor.execute('''
+            SELECT COUNT(ticket_id) as count
+            FROM purchases
+            ''')
+            next_index = cursor.fetchone()['count'] + 2
+            print('next index', next_index)
+            cursor.execute('''
+            INSERT INTO ticket(ticket_id, airline_name, flight_num, class, date)
+            VALUES (%s, %s, %s, %s, %s)
+            ''', (next_index, req['airline'], req['flight_num'], req['ticket_type'], req['date']))
+            cursor.execute('''
+            INSERT INTO purchases(ticket_id, customer_email, booking_agent_id, purchase_date)
+            VALUES(%s,%s,%s,%s)
+            ''', (next_index, session['email'], None, datetime.date.today().isoformat())
+                           )
+            db.commit()
+    except cursor.Error as e:
+        print(e)
+        return jsonify({'status': 'failed', 'msg': str(e)})
+    except Exception as e:
+        return jsonify({'status': 'failed', 'msg': 'Inernal error.' + str(e)})
     return jsonify({'status': 'success'})
-    return jsonify({'status': 'failed', 'msg': 'why i failed to purchase?'})
 
 
 @bp.route('/order', methods=['POST'])
