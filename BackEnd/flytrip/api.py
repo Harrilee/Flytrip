@@ -41,7 +41,7 @@ def purchase():
                                                               ))
         if cursor.fetchone()['soldable'] == 0:
             return jsonify({'status': 'failed', 'msg': 'Sorry, all tickets were sold out.'})
-        elif session['user_type']!='agent':
+        elif session['user_type']=='customer':
             cursor.execute('''
             SELECT COUNT(ticket_id) as count
             FROM purchases
@@ -57,7 +57,7 @@ def purchase():
             ''', (next_index, session['email'], None, datetime.date.today().isoformat())
                            )
             db.commit()
-        else:
+        elif session['user_type']=='agent':
             cursor.execute('''
                         SELECT COUNT(ticket_id) as count
                         FROM purchases
@@ -71,6 +71,22 @@ def purchase():
             INSERT INTO purchases(ticket_id, customer_email, booking_agent_id, purchase_date)
             VALUES(%s,%s,%s,%s)
             ''', (next_index, session['email'], None, datetime.date.today().isoformat())
+                           )
+            db.commit()
+        elif session['user_type']=='staff':
+            cursor.execute('''
+                        SELECT COUNT(ticket_id) as count
+                        FROM purchases
+                        ''')
+            next_index = cursor.fetchone()['count'] + 1
+            cursor.execute('''
+                        INSERT INTO ticket(ticket_id, airline_name, flight_num, class, date)
+                        VALUES (%s, %s, %s, %s, %s)
+                        ''', (next_index, req['airline'], req['flight_num'], req['ticket_type'], req['date']))
+            cursor.execute('''
+                        INSERT INTO purchases(ticket_id, customer_email, booking_agent_id, purchase_date)
+                        VALUES(%s,%s,%s,%s)
+                        ''', (next_index, req['email'], None, datetime.date.today().isoformat())
                            )
             db.commit()
     except cursor.Error as e:
@@ -133,30 +149,30 @@ def order():  # agent和customer共用接口
             db = get_db()
             with db.cursor() as cursor:
                 cursor.execute('''
-SELECT booking_agent_id,
-       flight.date,
-       airline_name                     airline,
-       flight_num,
-       departure_time,
-       departure_airport,
-       arrival_time,
-       arrival_airport,
-       CASE
-           WHEN class = 'BC' THEN BCprice
-           WHEN class = 'EC' THEN ECprice
-           WHEN class = 'FC' THEN FCprice
-           END                          price,
-       purchase_date                    purchase_time,
-       status,
-       customer_email,
-       CONCAT(firstname, ' ', lastname) customer_name
-FROM purchases
-         JOIN ticket USING (ticket_id)
-         JOIN flight USING (flight_num, airline_name)
-         JOIN customer ON purchases.customer_email = customer.email
-         JOIN booking_agent USING (booking_agent_id)
-WHERE booking_agent.email = %s;
-''', (email,))
+                    SELECT booking_agent_id,
+                           flight.date,
+                           airline_name                     airline,
+                           flight_num,
+                           departure_time,
+                           departure_airport,
+                           arrival_time,
+                           arrival_airport,
+                           CASE
+                               WHEN class = 'BC' THEN BCprice
+                               WHEN class = 'EC' THEN ECprice
+                               WHEN class = 'FC' THEN FCprice
+                               END                          price,
+                           purchase_date                    purchase_time,
+                           status,
+                           customer_email,
+                           CONCAT(firstname, ' ', lastname) customer_name
+                    FROM purchases
+                             JOIN ticket USING (ticket_id)
+                             JOIN flight USING (flight_num, airline_name)
+                             JOIN customer ON purchases.customer_email = customer.email
+                             JOIN booking_agent USING (booking_agent_id)
+                    WHERE booking_agent.email = %s;
+                    ''', (email,))
                 data = cursor.fetchall()
                 for index, item in enumerate(data):
                     item['key'] = index
