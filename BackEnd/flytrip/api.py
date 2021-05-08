@@ -41,7 +41,16 @@ def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所�
             cursor.execute("SELECT * FROM airline_staff WHERE username = %s;", (session['username'],))
             airline = cursor.fetchone()['airline_name']
             cursor.execute(
-                "SELECT flight_num, arrival_airport, departure_airport, arrival_time, departure_time, status, airline_name airline, date FROM flight WHERE airline_name = %s;",
+                '''SELECT flight_num,
+       arrival_airport,
+       departure_airport,
+       arrival_time,
+       departure_time,
+       status,
+       airline_name            airline,
+        DATE_FORMAT(date, '%Y-%m-%d') d
+FROM flight
+WHERE airline_name = %s;''',
                 (airline,))
             data = cursor.fetchall()
             print(data)
@@ -77,7 +86,7 @@ def statusStaffChange():
             airline = req['airline']
             status = req['new_status']
 
-            cursor.execute("UPDATE flight SET status = %s WHERE flight_num = %s AND airline_name = %s AND DATE = %s;",
+            cursor.execute("UPDATE flight SET status = %s WHERE flight_num = %s AND airline_name = %s AND date = %s;",
                            (status, flight_num, airline, date))
             db.commit()
             return jsonify({'status': 'success',
@@ -265,7 +274,7 @@ FROM temp_sum
 GROUP BY DATE_FORMAT(date, '%b')
 ''')
             data = cursor.fetchall()
-            month = [{'month': 'Jan', 'selling': 0}, {'month': 'Feb', 'selling': 0}, {'month': 'Mac', 'selling': 0},
+            month = [{'month': 'Jan', 'selling': 0}, {'month': 'Feb', 'selling': 0}, {'month': 'Mar', 'selling': 0},
                      {'month': 'Apr', 'selling': 0}, {'month': 'May', 'selling': 0}, {'month': 'Jun', 'selling': 0},
                      {'month': 'Jul', 'selling': 0}, {'month': 'Aug', 'selling': 0}, {'month': 'Sep', 'selling': 0},
                      {'month': 'Oct', 'selling': 0}, {'month': 'Nov', 'selling': 0}, {'month': 'Dec', 'selling': 0}]
@@ -482,6 +491,10 @@ def get_customer_orders():
 def get_selling_by_date():
     req = request.json
     print(req)
+    if len(req['date']) != 2:
+        return jsonify({'status': 'failed',
+                        'msg': 'wrong arguments'})
+
     begin = req['date'][0][:10]
     end = req['date'][1][:10]
     print(begin, end)
@@ -503,7 +516,7 @@ def get_selling_by_date():
              JOIN flight USING (airline_name, flight_num, date)
     WHERE purchase_date > %s
       AND purchase_date < %s)
-SELECT SUM(price) sum
+SELECT IFNULL(SUM(price), 0) sum
 FROM purchase_time;
 ''', (begin, end,))
             data = cursor.fetchone()
@@ -706,6 +719,7 @@ def search_flight():
             if 'BCSellable' not in item:
                 item['BCSellable'] = True
         # todo: 这里做模糊搜索吧，如果缺少（部分）信息，则返回全部信息（比如，若航班号和日期均为空，则返回所有可售航班）
+        print(result)
         return jsonify({'status': 'success', 'dataSource': result})
 
     elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
