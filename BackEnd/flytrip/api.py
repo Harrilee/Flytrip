@@ -425,7 +425,7 @@ def get_selling():
         with db.cursor() as cursor:
             cursor.execute('''
 WITH temp_sum AS (
-    SELECT date,
+    SELECT purchase_date date,
            CASE
                WHEN class = 'BC' THEN BCprice
                WHEN class = 'FC' THEN FCprice
@@ -433,11 +433,11 @@ WITH temp_sum AS (
                ELSE ECprice
                END
                price
-    FROM flight
-             NATURAL JOIN ticket
-    WHERE DATE > DATE_SUB(NOW(), INTERVAL 1 YEAR)
-)
-
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight using (flight_num, date)
+    WHERE purchases.purchase_date > DATE_SUB(NOW(), INTERVAL 1 YEAR)
+    )
 SELECT DATE_FORMAT(date, '%b') month, SUM(price) selling
 FROM temp_sum
 GROUP BY DATE_FORMAT(date, '%b')
@@ -453,7 +453,8 @@ GROUP BY DATE_FORMAT(date, '%b')
                 for j in month:
                     if j['month'] == i['month']:
                         j['selling'] = int(i['selling'])
-            print(month)
+            curr = datetime.datetime.today().month
+            month = month[5:] + month[:5]
             return jsonify({'status': 'success',
                             'data': month,  # 顺序很重要！！
                             'msg': ''})
