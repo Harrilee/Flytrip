@@ -76,9 +76,9 @@ function Buy(props) {
                     <Descriptions.Item label={'Date'}>{props.ticket.date}</Descriptions.Item>
                     <Descriptions.Item label={'Take off'}>{props.ticket.departure_time}</Descriptions.Item>
                     <Descriptions.Item label={'Departure'}
-                                       span={2}>{props.ticket.depart_city}, {props.ticket.depart_airport}</Descriptions.Item>
+                                       span={2}>{props.ticket.depart_city}, {props.ticket.departure_airport}</Descriptions.Item>
                     <Descriptions.Item label={'Arrival'}
-                                       span={2}>{props.ticket.arrive_city}, {props.ticket.arrive_airport}</Descriptions.Item>
+                                       span={2}>{props.ticket.arrive_city}, {props.ticket.arrival_airport}</Descriptions.Item>
                     <Descriptions.Item label={'Class'} span={2}>
                         {props.type === 'EC' ? 'Economy class' :
                             props.type === 'BC' ? 'Business class' : 'First Class'}

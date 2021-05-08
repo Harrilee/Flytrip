@@ -222,6 +222,8 @@ WHERE airline_name = %s;''',
             data = cursor.fetchall()
             for index, item in enumerate(data):
                 item['key'] = index
+                item['arrival_time'] = item['arrival_time']   #TODO: 修改时间显示内容！！！！！
+                item['departure_time'] = item['departure_time']
                 item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
                 item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
                 item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
@@ -1033,7 +1035,6 @@ def search_flight():
             if 'BCSellable' not in item:
                 item['BCSellable'] = True
         # todo: 这里做模糊搜索吧，如果缺少（部分）信息，则返回全部信息（比如，若航班号和日期均为空，则返回所有可售航班）
-        print(result)
         return jsonify({'status': 'success', 'dataSource': result})
 
     elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
