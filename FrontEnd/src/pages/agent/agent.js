@@ -85,7 +85,9 @@ function Buy(props) {
                                        span={2}>{props.ticket[props.type + 'price'] + '￥'}</Descriptions.Item>
                     <Descriptions.Item label={'Customer Email'}>
                         <Input bordered={false} placeholder={'Email of the customer'}
-                               style={{transform: 'translateX(-10px)'}} id={'customerEmail'}></Input>
+                               style={{transform: 'translateX(-10px)'}} id={'customerEmail'} onChange={e => {
+                            document.getElementById('customerEmail').value = e.target.value
+                        }}></Input>
                     </Descriptions.Item>
                 </Descriptions>
             </Modal>
@@ -149,7 +151,7 @@ function Tickets() {
                                   url += '&' + key + '=' + form[key]
                               })
                               console.log(url)
-                              fetch(url,{credentials: 'include',})
+                              fetch(url, {credentials: 'include',})
                                   .then((resp) => resp.json())
                                   .then(data => {
                                       setDataSource(data.dataSource)
@@ -295,7 +297,7 @@ function UpcomingFlights() {
                                   url += '&' + key + '=' + form[key]
                               })
                               console.log(form)
-                              fetch(url,{credentials: 'include',})
+                              fetch(url, {credentials: 'include',})
                                   .then((resp) => resp.json())
                                   .then(data => {
                                       setDataSource(data.dataSource)
@@ -460,14 +462,14 @@ function MyOrders() {
         });
     }
     if (ticketBuyer.length === 0) {
-        fetch('http://localhost:5000/api/agent_get_top_customer_by_ticket',{credentials: 'include',})
+        fetch('http://localhost:5000/api/agent_get_top_customer_by_ticket', {credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 setTicketBuyer(data.data);
             });
     }
     if (commission.length === 0) {
-        fetch('http://localhost:5000/api/agent_get_top_customer_by_commission',{credentials: 'include',})
+        fetch('http://localhost:5000/api/agent_get_top_customer_by_commission', {credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 setCommission(data.data);
@@ -626,7 +628,7 @@ function MyOrders() {
                                         text: ''
                                     },
                                     xAxis: {
-                                        categories: ticketBuyer.map(d=>d.name),
+                                        categories: ticketBuyer.map(d => d.name),
                                         crosshair: true
                                     },
                                     yAxis: {
@@ -635,8 +637,7 @@ function MyOrders() {
                                             text: ''
                                         }
                                     },
-                                    tooltip: {
-                                    },
+                                    tooltip: {},
                                     plotOptions: {
                                         column: {
                                             pointPadding: 0.2,
@@ -645,7 +646,7 @@ function MyOrders() {
                                     },
                                     series: [{
                                         name: 'Customer',
-                                        data: ticketBuyer.map(d=>d.ticket)
+                                        data: ticketBuyer.map(d => d.ticket)
                                     }],
                                     credits: {
                                         enabled: false
@@ -671,7 +672,7 @@ function MyOrders() {
                                         text: ''
                                     },
                                     xAxis: {
-                                        categories: commission.map(d=>d.name),
+                                        categories: commission.map(d => d.name),
                                         crosshair: true
                                     },
                                     yAxis: {
@@ -680,8 +681,7 @@ function MyOrders() {
                                             text: ''
                                         }
                                     },
-                                    tooltip: {
-                                    },
+                                    tooltip: {},
                                     plotOptions: {
                                         column: {
                                             pointPadding: 0.2,
@@ -690,7 +690,7 @@ function MyOrders() {
                                     },
                                     series: [{
                                         name: 'Customer',
-                                        data: commission.map(d=>d.commission)
+                                        data: commission.map(d => d.commission)
                                     }],
                                     credits: {
                                         enabled: false

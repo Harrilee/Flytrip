@@ -1,5 +1,6 @@
 import datetime
 
+from . import testData
 from .auth import *
 from .db import *
 
@@ -39,14 +40,29 @@ def purchase():
                                                               req['ticket_type']
                                                               ))
         if cursor.fetchone()['soldable'] == 0:
-            return jsonify({'status': 'failed', 'msg': 'Sorry, all tickets are sold out.'})
-        else:
+            return jsonify({'status': 'failed', 'msg': 'Sorry, all tickets were sold out.'})
+        elif session['user_type']!='agent':
             cursor.execute('''
-            SELECT COUNT(ticket_id) AS count
+            SELECT COUNT(ticket_id) as count
             FROM purchases
             ''')
-            next_index = cursor.fetchone()['count'] + 2
-            print('next index', next_index)
+            next_index = cursor.fetchone()['count'] + 1
+            cursor.execute('''
+            INSERT INTO ticket(ticket_id, airline_name, flight_num, class, date)
+            VALUES (%s, %s, %s, %s, %s)
+            ''', (next_index, req['airline'], req['flight_num'], req['ticket_type'], req['date']))
+            cursor.execute('''
+            INSERT INTO purchases(ticket_id, customer_email, booking_agent_id, purchase_date)
+            VALUES(%s,%s,%s,%s)
+            ''', (next_index, session['email'], None, datetime.date.today().isoformat())
+                           )
+            db.commit()
+        else:
+            cursor.execute('''
+                        SELECT COUNT(ticket_id) as count
+                        FROM purchases
+                        ''')
+            next_index = cursor.fetchone()['count'] + 1
             cursor.execute('''
             INSERT INTO ticket(ticket_id, airline_name, flight_num, class, date)
             VALUES (%s, %s, %s, %s, %s)
@@ -105,8 +121,8 @@ def order():  # agent和customer共用接口
                     item['price'] = float(item['price'])
                     item['departure_city'] = get_city_from_airport(item['departure_airport'])
                     item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
-                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
-                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
+                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
+                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
                     item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
                     item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
                     item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
@@ -147,8 +163,8 @@ WHERE booking_agent.email = %s;
                     item['price'] = float(item['price'])
                     item['departure_city'] = get_city_from_airport(item['departure_airport'])
                     item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
-                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
-                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
+                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
+                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
                     item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
                     item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
                     item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
@@ -190,14 +206,12 @@ WHERE airline_name = %s;''',
             data = cursor.fetchall()
             for index, item in enumerate(data):
                 item['key'] = index
-                item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
-                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
+                item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
+                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
                 item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
                 item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
                 item['depart_city'] = get_city_from_airport(item['departure_airport'])
                 item['departure_city'] = get_city_from_airport(item['departure_airport'])
-                item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
-                item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
             print(data)
 
         return jsonify({'status': 'success',
@@ -333,7 +347,6 @@ def addNewFlight():
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
                 (airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time, EC, BC, FC,
                  'upcoming', airplane_id, departure_time[:10]))
-            db.commit()
         return jsonify({'status': 'success',
                         'msg': ''})
     except pymysql.Error as err:
@@ -657,8 +670,8 @@ WHERE customer_email = %s;
                 item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
                 item['depart_airport'] = item['departure_airport']
                 item['arrive_airport'] = item['arrival_airport']
-                item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
-                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
+                item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
+                item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
                 item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
                 item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
                 item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
@@ -1008,44 +1021,8 @@ def search_flight():
 
     elif request.args.get('action') == 'getStatus':  # Guest 查看所有航班信息
         # todo: 这个也做模糊搜索吧，类似上面
-        try:
-            flight_num = request.args.get('flight_num')
-            airline = request.args.get('airline')
-
-            db = get_db()
-            with db.cursor() as cursor:
-                cursor.execute('''
-SELECT airline_name airline,
-       flight_num,
-       departure_time,
-       arrival_time,
-       departure_airport,
-       arrival_airport,
-       date,
-       status
-FROM flight
-WHERE flight_num = %s
-  AND airline_name = %s
-                ''', (flight_num, airline,))
-                data = cursor.fetchall()
-                for index, item in enumerate(data):
-                    item['key'] = index
-                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).total_seconds() // 3600
-                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).total_seconds() % 3600) // 60
-                    item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%Y-%m-%d %H:%M')
-                    item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%Y-%m-%d %H:%M')
-                    item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
-                    item['departure_city'] = get_city_from_airport(item['departure_airport'])
-                    item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
-
-                return jsonify({'status': 'success',
-                                'dataSource': data,
-                                'msg': ''})
-
-        except pymysql.Error as err:
-            return jsonify({'status': 'failed',
-                            'dataSource': [],
-                            'msg': err.args[1]})
+        return jsonify({'status': 'success',
+                        'dataSource': testData.statusDataSource})
     else:
         return jsonify({'status': 'failed',
                         'dataSource': [],
