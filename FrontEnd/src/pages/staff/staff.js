@@ -1172,11 +1172,11 @@ function Statistics() {
                                 suffix="￥"
                             />
                         </Col>
-                        <Col span={4} align={'end'}>
+                        <Col span={0} align={'end'}>
                             Range:&nbsp;
                         </Col>
-                        <Col span={12} align={'end'}>
-                            <DatePicker.RangePicker style={{transform: 'translateY(-5px)'}} defaultValue={moment()}
+                        <Col span={16} align={'end'}>
+                            <DatePicker.RangePicker style={{transform: 'translateY(-5px)'}} defaultValue={[moment().subtract(7,'d'),moment()]}
                                                     onChange={date => {
                                                         fetch('http://localhost:5000/api/get_selling_by_date', {
                                                             mode: 'cors',
