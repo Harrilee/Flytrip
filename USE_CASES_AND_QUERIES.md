@@ -94,7 +94,7 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
 3. Login: 3 types of user login (Customer, Booking agent, Airline Staff). User enters their username (email address will
    be used as username), x, and password, y, via forms on login page. This data is sent as POST parameters to the
    login-authentication component, which checks whether there is a tuple in the Person table with username=x and the
-   password = md5(y).
+   password = check_password_hash(y). This is the builtin function provided by werkzeug.security that implements salting and hashing.
 
     1. If so, login is successful. A session is initiated with the member’s username stored as a session variable.
        Optionally, you can store other session variables. Control is redirected to a component that displays the user’s
