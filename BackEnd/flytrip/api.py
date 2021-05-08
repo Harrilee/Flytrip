@@ -20,14 +20,97 @@ def order():  # agent和customer共用接口
     req = request.json
     print(req)
     print(session)
-    if session['user_type'] == 'customer':
-        email = session['email']
-        return jsonify({'status': 'success', 'data': testData.orderHistoryCustomer})
+    try:
+        if session['user_type'] == 'customer':
+            email = session['email']
+            db = get_db()
+            with db.cursor() as cursor:
+                cursor.execute('''
+                SELECT flight.date,
+           airline_name                     airline,
+           flight_num,
+           departure_time,
+           departure_airport,
+           arrival_time,
+           arrival_airport,
+           CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'EC' THEN ECprice
+               WHEN class = 'FC' THEN FCprice
+               END                          price,
+           purchase_date                    purchase_time,
+           status,
+           customer_email,
+           CONCAT(firstname, ' ', lastname) customer_name
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (flight_num, airline_name)
+             JOIN customer ON purchases.customer_email = customer.email
+    WHERE customer_email = %s;
+    ''', (email,))
+                data = cursor.fetchall()
+                print(data)
+                for index, item in enumerate(data):
+                    item['key'] = index
+                    item['price'] = float(item['price'])
+                    item['departure_city'] = get_city_from_airport(item['departure_airport'])
+                    item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
+                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
+                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+                    item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
+                    item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
+                    item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
+            return jsonify({'status': 'success', 'data': data})
 
-    elif session['user_type'] == 'agent':
-        return jsonify({'status': 'success', 'data': testData.orderHistoryAgent})
-    else:
-        return jsonify({'status': 'failed', 'msg': 'You are not authorized.'})
+        elif session['user_type'] == 'agent':
+            email = session['email']
+            db = get_db()
+            with db.cursor() as cursor:
+                cursor.execute('''
+SELECT booking_agent_id,
+       flight.date,
+       airline_name                     airline,
+       flight_num,
+       departure_time,
+       departure_airport,
+       arrival_time,
+       arrival_airport,
+       CASE
+           WHEN class = 'BC' THEN BCprice
+           WHEN class = 'EC' THEN ECprice
+           WHEN class = 'FC' THEN FCprice
+           END                          price,
+       purchase_date                    purchase_time,
+       status,
+       customer_email,
+       CONCAT(firstname, ' ', lastname) customer_name
+FROM purchases
+         JOIN ticket USING (ticket_id)
+         JOIN flight USING (flight_num, airline_name)
+         JOIN customer ON purchases.customer_email = customer.email
+         JOIN booking_agent USING (booking_agent_id)
+WHERE booking_agent.email = %s;
+''', (email,))
+                data = cursor.fetchall()
+                for index, item in enumerate(data):
+                    item['key'] = index
+                    item['price'] = float(item['price'])
+                    item['departure_city'] = get_city_from_airport(item['departure_airport'])
+                    item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
+                    item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
+                    item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+                    item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
+                    item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
+                    item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
+                print(data)
+            return jsonify({'status': 'success', 'data': data})
+
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
+
+    # except KeyError:
+    #     return jsonify({'status': 'failed', 'msg': 'You are not authorized.'})
 
 
 @bp.route('/get_status_staff', methods=['GET'])
@@ -662,11 +745,10 @@ FROM total_sum;
 def get_destination():
     db = get_db()
     with db.cursor() as cursor:
-        cursor.execute("SELECT COUNT(*) COUNT,b.airport_city "
+        cursor.execute("SELECT COUNT(*) COUNT,a.airport_city "
                        " FROM (flight JOIN airport a ON flight.arrival_airport = a.airport_name) "
-                       "JOIN airport b ON departure_airport = b.airport_name "
                        "WHERE departure_time > DATE_SUB(NOW(), INTERVAL 1 YEAR) "
-                       "GROUP BY b.airport_city "
+                       "GROUP BY a.airport_city "
                        "ORDER BY COUNT DESC "
                        "LIMIT 3; ")
         result = cursor.fetchall()
@@ -674,11 +756,10 @@ def get_destination():
         for i in result:
             year.append(i['airport_city'])
 
-        cursor.execute("SELECT COUNT(*) COUNT,b.airport_city "
+        cursor.execute("SELECT COUNT(*) COUNT,a.airport_city "
                        " FROM (flight JOIN airport a ON flight.arrival_airport = a.airport_name) "
-                       "JOIN airport b ON departure_airport = b.airport_name "
                        "WHERE departure_time > DATE_SUB(NOW(), INTERVAL 3 MONTH) "
-                       "GROUP BY b.airport_city "
+                       "GROUP BY a.airport_city "
                        "ORDER BY COUNT DESC "
                        "LIMIT 3; ")
         result = cursor.fetchall()
