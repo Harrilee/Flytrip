@@ -41,25 +41,28 @@ def statusStaffGet():  # staff 拿到“本航司”的status数据，需要所�
             cursor.execute("SELECT * FROM airline_staff WHERE username = %s;", (session['username'],))
             airline = cursor.fetchone()['airline_name']
             cursor.execute(
-                '''SELECT flight_num,
+                '''
+SELECT flight_num,
        arrival_airport,
        departure_airport,
        arrival_time,
        departure_time,
        status,
        airline_name            airline,
-        DATE_FORMAT(date, '%Y-%m-%d') d
+        date_format(date, '%%Y-%%m-%%d') date
 FROM flight
 WHERE airline_name = %s;''',
                 (airline,))
             data = cursor.fetchall()
-            print(data)
             for index, item in enumerate(data):
                 item['key'] = index
                 item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
                 item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
                 item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
+                item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
                 item['depart_city'] = get_city_from_airport(item['departure_airport'])
+                item['departure_city'] = get_city_from_airport(item['departure_airport'])
+            print(data)
 
         return jsonify({'status': 'success',
                         'dataSource': data})
@@ -67,7 +70,7 @@ WHERE airline_name = %s;''',
         return jsonify({'status': 'failed',
                         'msg': err.args[1]})
     except Exception as e:
-        print('exception:', e, data)
+        print('exception:', e)
         return jsonify({'status': 'failed',
                         'msg': 'Unknown error'})
 
@@ -493,6 +496,7 @@ def get_selling_by_date():
     print(req)
     if len(req['date']) != 2:
         return jsonify({'status': 'failed',
+                        'data': 0,
                         'msg': 'wrong arguments'})
 
     begin = req['date'][0][:10]
@@ -633,24 +637,24 @@ def search_flight():
             SELECT airplane_id,
                    airline_name,
                    date,
-                   flight.departure_airport as departure_airport,
-                   d_airport.airport_city   as departure_city,
-                   a_airport.airport_city   as arrival_city,
-                   a_airport.airport_name   as arrival_airport,
+                   flight.departure_airport AS departure_airport,
+                   d_airport.airport_city   AS departure_city,
+                   a_airport.airport_city   AS arrival_city,
+                   a_airport.airport_name   AS arrival_airport,
                    FCprice,
                    BCprice,
                    ECprice,
                    departure_time,
                    arrival_time,
                    flight_num
-            from flight
+            FROM flight
                      JOIN airport AS d_airport
                      JOIN airport AS a_airport
             WHERE flight.departure_airport = d_airport.airport_name
               AND flight.arrival_airport = a_airport.airport_name
               AND date = %s
-              AND (upper(%s) = upper(d_airport.airport_name) OR upper(%s) = upper(d_airport.airport_city))
-              AND (upper(%s)= upper(a_airport.airport_name) OR upper(%s) = upper(a_airport.airport_city))
+              AND (UPPER(%s) = UPPER(d_airport.airport_name) OR UPPER(%s) = UPPER(d_airport.airport_city))
+              AND (UPPER(%s)= UPPER(a_airport.airport_name) OR UPPER(%s) = UPPER(a_airport.airport_city))
         """, (date, fr, fr, to, to))
 
         result = cursor.fetchall()
@@ -676,7 +680,7 @@ def search_flight():
             cursor = db.cursor()
             cursor.execute('''
                     WITH sold_ticket_info AS (
-                        SELECT COUNT(class) as sold_tickets, class
+                        SELECT COUNT(class) AS sold_tickets, class
                         FROM ticket
                         WHERE airline_name = %s
                           AND flight_num = %s
@@ -692,16 +696,16 @@ def search_flight():
                                AND date = %s
                          ),
                          available_ticket_info AS (
-                             SELECT 'EC' as class, ECseats as available
+                             SELECT 'EC' AS class, ECseats AS available
                              FROM available_ticket_info_temp
                              UNION
-                             SELECT 'BC' as class, BCseats as available
+                             SELECT 'BC' AS class, BCseats AS available
                              FROM available_ticket_info_temp
                              UNION
-                             SELECT 'FC' as class, FCseats as available
+                             SELECT 'FC' AS class, FCseats AS available
                              FROM available_ticket_info_temp
                          )
-                    SELECT class, sold_tickets<available as soldable
+                    SELECT class, sold_tickets<available AS soldable
                     FROM available_ticket_info NATURAL JOIN sold_ticket_info
                     ''', (item['airline'], item['flight_num'], date, item['airline'], item['flight_num'], date))
             available_info = cursor.fetchall()
