@@ -222,10 +222,10 @@ WHERE airline_name = %s;''',
             data = cursor.fetchall()
             for index, item in enumerate(data):
                 item['key'] = index
-                item['arrival_time'] = item['arrival_time']   #TODO: 修改时间显示内容！！！！！
-                item['departure_time'] = item['departure_time']
                 item['durationHour'] = (item['arrival_time'] - item['departure_time']).seconds // 3600
                 item['durationMin'] = ((item['arrival_time'] - item['departure_time']).seconds % 3600) // 60
+                item['arrival_time'] = item['arrival_time'].strftime("%H:%M")
+                item['departure_time'] = item['departure_time'].strftime("%H:%M")
                 item['arrive_city'] = get_city_from_airport(item['arrival_airport'])
                 item['arrival_city'] = get_city_from_airport(item['arrival_airport'])
                 item['depart_city'] = get_city_from_airport(item['departure_airport'])
