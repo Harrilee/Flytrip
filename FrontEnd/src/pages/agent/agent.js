@@ -74,9 +74,9 @@ function Buy(props) {
                     <Descriptions.Item label={'Date'}>{props.ticket.date}</Descriptions.Item>
                     <Descriptions.Item label={'Take off'}>{props.ticket.departure_time}</Descriptions.Item>
                     <Descriptions.Item label={'Departure'}
-                                       span={2}>{props.ticket.depart_city}, {props.ticket.departure_airport}</Descriptions.Item>
+                                       span={2}>{props.ticket.departure_city}, {props.ticket.departure_airport}</Descriptions.Item>
                     <Descriptions.Item label={'Arrival'}
-                                       span={2}>{props.ticket.arrive_city}, {props.ticket.arrival_airport}</Descriptions.Item>
+                                       span={2}>{props.ticket.arrival_city}, {props.ticket.arrival_airport}</Descriptions.Item>
                     <Descriptions.Item label={'Class'} span={2}>
                         {props.type === 'EC' ? 'Economy class' :
                             props.type === 'BC' ? 'Business class' : 'First Class'}
@@ -219,7 +219,7 @@ function Tickets() {
                                         <div className={'airports'}>
                                             <Row align={'middle'} justify={'bottomCenter'}>
                                                 <Col span={11} style={{textAlign: 'right'}}>
-                                                    {d.depart_airport}
+                                                    {d.departure_airport + ' | ' + d.departure_city}
                                                 </Col>
                                                 <Col span={2}>
                                                     <div style={{
@@ -229,7 +229,7 @@ function Tickets() {
                                                     }}/>
                                                 </Col>
                                                 <Col span={11} style={{textAlign: 'left'}}>
-                                                    {d.arrive_airport}
+                                                    {d.arrival_city+' | ' + d.arrival_airport}
                                                 </Col>
                                             </Row>
                                         </div>
