@@ -1,6 +1,5 @@
 import datetime
 
-from . import testData
 from .auth import *
 from .db import *
 
@@ -41,7 +40,7 @@ def purchase():
                                                               ))
         if cursor.fetchone()['soldable'] == 0:
             return jsonify({'status': 'failed', 'msg': 'Sorry, all tickets were sold out.'})
-        elif session['user_type']=='customer':
+        elif session['user_type'] == 'customer':
             cursor.execute('''
             SELECT COUNT(ticket_id) as count
             FROM purchases
@@ -70,7 +69,7 @@ def purchase():
             cursor.execute('''
             INSERT INTO purchases(ticket_id, customer_email, booking_agent_id, purchase_date)
             VALUES(%s,%s,%s,%s)
-            ''', (next_index, session['email'], None, datetime.date.today().isoformat())
+            ''', (next_index, req['email'], session['agent_ID'], datetime.date.today().isoformat())
                            )
             db.commit()
         elif session['user_type']=='staff':
@@ -523,6 +522,7 @@ LIMIT 5;
 @agent_login_required
 def get_top_customer_ticket():
     try:
+        agent_id = session['agent_id']
         db = get_db()
         with db.cursor() as cursor:
             cursor.execute('''
@@ -531,10 +531,11 @@ FROM ticket
          JOIN purchases USING (ticket_id),
      customer
 WHERE customer.email = purchases.customer_email
+and booking_agent_id = %s
 GROUP BY email
-ORDER BY ticket DESC 
+ORDER BY ticket DESC
 LIMIT 5;
-''')
+''', (agent_id, ))
             data = cursor.fetchall()
 
             return jsonify({'status': 'success',
