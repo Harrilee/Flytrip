@@ -561,9 +561,16 @@ function MyOrders() {
                 <DatePicker.RangePicker value={filteredData.range} onChange={(range) => {
                     setFilteredData({
                         orderData: filteredData.orderData,
-                        data: filteredData.orderData.filter(d => {
-                            return moment(d.date).isBetween(range[0].format("YYYY-MM-DD"), range[1].format("YYYY-MM-DD"))
-                        }),
+                        data: ()=>{
+                            try{
+                                return(filteredData.orderData.filter(d => {
+                                    return moment(d.date).isBetween(range[0].format("YYYY-MM-DD"), range[1].format("YYYY-MM-DD"))
+                                }))
+                            }
+                            catch (e){
+                                return []
+                            }
+                        },
                         loaded: true,
                         range: range
                     })
@@ -575,9 +582,11 @@ function MyOrders() {
                                 title="Total commission"
                                 precision={2}
                                 suffix="￥"
-                                value={filteredData.data.map(d => d.price).reduce((accu, cur) => {
+                                value={filteredData.data.map?filteredData.data.map(d => d.price).reduce((accu, cur) => {
                                     return accu + cur
-                                }, 0) / 10}
+                                }, 0) / 10
+                                :
+                                0}
                             />
                         </Card>
                     </Col>
@@ -595,7 +604,7 @@ function MyOrders() {
                         <Card bordered={false}>
                             <Statistic
                                 title="Order in progress"
-                                value={filteredData.data.filter(d => d.status !== 'finished').length}
+                                value={filteredData.data.filter?filteredData.data.filter(d => d.status !== 'finished').length:0}
                                 precision={0}
                                 suffix=""
                             />
@@ -605,7 +614,7 @@ function MyOrders() {
                         <Card bordered={false}>
                             <Statistic
                                 title="Finished order"
-                                value={filteredData.data.filter(d => d.status == 'finished').length}
+                                value={filteredData.data.filter?filteredData.data.filter(d => d.status == 'finished').length:0}
                                 precision={0}
                                 suffix=""
                             />
