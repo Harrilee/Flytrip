@@ -715,9 +715,9 @@ def get_selling_by_date():
     req = request.json
     print(req)
     if len(req['date']) != 2:
-        return jsonify({'status': 'failed',
+        return jsonify({'status': 'success',
                         'data': 0,
-                        'msg': 'wrong arguments'})
+                        'msg': ''})
 
     begin = req['date'][0][:10]
     end = req['date'][1][:10]
@@ -745,6 +745,7 @@ FROM purchase_time;
 ''', (begin, end,))
             data = cursor.fetchone()
             print(data)
+            assert float(data['sum']) is not None
 
             return jsonify({'status': 'success',
                             'data': float(data['sum']),
