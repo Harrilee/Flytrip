@@ -293,9 +293,10 @@ def get_passengers():
             result[i['class']].append({'name': i['firstname'] + ' ' + i['lastname'],
                                        'firstname': i['firstname'], 'lastname': i['lastname'],
                                        'email': i['email']})
-            return jsonify({'status': 'success',
-                            'msg': '',
-                            'data': result})
+        print(data)
+        return jsonify({'status': 'success',
+                        'msg': '',
+                        'data': result})
     except pymysql.Error as err:
         return jsonify({'status': 'failed',
                         'msg': err.args[1]})
