@@ -1014,6 +1014,7 @@ def search_flight():
               AND date = %s
               AND (UPPER(%s) = UPPER(d_airport.airport_name) OR UPPER(%s) = UPPER(d_airport.airport_city))
               AND (UPPER(%s)= UPPER(a_airport.airport_name) OR UPPER(%s) = UPPER(a_airport.airport_city))
+            AND status = 'upcoming'
         """, (date, fr, fr, to, to))
 
         result = cursor.fetchall()
@@ -1053,6 +1054,7 @@ def search_flight():
                              WHERE airline_name = %s
                                AND flight_num = %s
                                AND date = %s
+                               
                          ),
                          available_ticket_info AS (
                              SELECT 'EC' AS class, ECseats AS available
@@ -1104,6 +1106,7 @@ SELECT airline_name airline,
 FROM flight
 WHERE flight_num = %s
   AND airline_name = %s
+
                 ''', (flight_num, airline,))
                 data = cursor.fetchall()
                 for index, item in enumerate(data):
