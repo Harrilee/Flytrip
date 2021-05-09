@@ -366,6 +366,7 @@ def addNewFlight():
                 "VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);",
                 (airline, flight_num, departure_airport, departure_time, arrival_airport, arrival_time, EC, BC, FC,
                  'upcoming', airplane_id, departure_time[:10]))
+            db.commit()
         return jsonify({'status': 'success',
                         'msg': ''})
     except pymysql.Error as err:
