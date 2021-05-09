@@ -42,7 +42,7 @@ def purchase():
             return jsonify({'status': 'failed', 'msg': 'Sorry, all tickets were sold out.'})
         elif session['user_type'] == 'customer':
             cursor.execute('''
-            SELECT COUNT(ticket_id) as count
+            SELECT COUNT(ticket_id) AS count
             FROM purchases
             ''')
             next_index = cursor.fetchone()['count'] + 1
@@ -56,9 +56,9 @@ def purchase():
             ''', (next_index, session['email'], None, datetime.date.today().isoformat())
                            )
             db.commit()
-        elif session['user_type']=='agent':
+        elif session['user_type'] == 'agent':
             cursor.execute('''
-                        SELECT COUNT(ticket_id) as count
+                        SELECT COUNT(ticket_id) AS count
                         FROM purchases
                         ''')
             next_index = cursor.fetchone()['count'] + 1
@@ -72,9 +72,9 @@ def purchase():
             ''', (next_index, req['email'], session['agent_ID'], datetime.date.today().isoformat())
                            )
             db.commit()
-        elif session['user_type']=='staff':
+        elif session['user_type'] == 'staff':
             cursor.execute('''
-                        SELECT COUNT(ticket_id) as count
+                        SELECT COUNT(ticket_id) AS count
                         FROM purchases
                         ''')
             next_index = cursor.fetchone()['count'] + 1
@@ -421,6 +421,48 @@ def addNewAirport():
                         'msg': err.args[1]})
 
 
+@bp.route('/get_selling_by_month', methods=['POST'])
+@customer_login_required
+def get_selling_by_month():
+    try:
+        req = request.json
+        db = get_db()
+        fr = req['from']
+        to = req['to']
+        email = session['email']
+        with db.cursor() as cursor:
+            cursor.execute('''
+    SELECT DATE_FORMAT(purchase_date, '%b') month,
+       DATE_FORMAT(purchase_date, '%Y') year,
+       SUM(CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               WHEN class = 'EC' THEN ECprice
+               ELSE ECprice
+           END)
+                                        price
+FROM purchases
+         JOIN ticket USING (ticket_id)
+         JOIN flight USING (airline_name, flight_num)
+         JOIN customer c ON purchases.customer_email = c.email
+WHERE purchase_date < %s
+  AND purchase_date > %s
+  AND customer_email = %s
+GROUP BY DATE_FORMAT(purchase_date, '%b'),
+         DATE_FORMAT(purchase_date, '%Y');
+    ''', (fr, to, email,))
+            data = cursor.fetchall()
+            for index, item in enumerate(data):
+                item['key'] = index
+                item['selling'] = float(item['selling'])
+            return jsonify({'status': 'success',
+                            'data': data,
+                            'msg': ''})
+    except pymysql.Error as err:
+        return jsonify({'status': 'failed',
+                        'msg': err.args[1]})
+
+
 @bp.route('/get_selling', methods=['GET'])  # for bar chart
 @staff_login_required
 def get_selling():
@@ -439,7 +481,7 @@ WITH temp_sum AS (
                price
     FROM purchases
              JOIN ticket USING (ticket_id)
-             JOIN flight using (flight_num, date)
+             JOIN flight USING (flight_num, date)
     WHERE purchases.purchase_date > DATE_SUB(NOW(), INTERVAL 1 YEAR)
     )
 SELECT DATE_FORMAT(date, '%b') month, SUM(price) selling
@@ -456,7 +498,7 @@ GROUP BY DATE_FORMAT(date, '%b')
                 print(i[list(i.keys())[0]])
                 for j in month:
                     if j['month'] == i['month']:
-                        j['selling'] = int(i['selling'])
+                        j['selling'] = float(i['selling'])
             curr = datetime.datetime.today().month
             month = month[curr:] + month[:curr]
             return jsonify({'status': 'success',
@@ -534,11 +576,11 @@ FROM ticket
          JOIN purchases USING (ticket_id),
      customer
 WHERE customer.email = purchases.customer_email
-and booking_agent_id = %s
+AND booking_agent_id = %s
 GROUP BY email
 ORDER BY ticket DESC
 LIMIT 5;
-''', (agent_id, ))
+''', (agent_id,))
             data = cursor.fetchall()
 
             return jsonify({'status': 'success',
