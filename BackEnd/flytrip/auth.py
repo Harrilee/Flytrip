@@ -103,7 +103,7 @@ def register():
                 cursor.execute(
                     "INSERT INTO customer(email, firstname, lastname, password, building_number, street, city, state, phone_number, "
                     "passport_number, passport_expiration, passport_country, date_of_birth) "
-                    " VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                    " VALUES(%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
                     (
                         req['email'],
                         req['firstname'],
