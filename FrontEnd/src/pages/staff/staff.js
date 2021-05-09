@@ -1296,7 +1296,7 @@ function Statistics() {
 
     function AgentTable() {
         const [agentStats, setAgentStats] = React.useState([])
-        const agentCols = [{
+        const agentColsT = [{
             title: 'Name',
             dataIndex: 'name',
             key: 'name',
@@ -1310,6 +1310,17 @@ function Statistics() {
                 title: 'Tickets',
                 dataIndex: 'tickets',
                 key: 'tickets'
+            },
+        ]
+        const agentColsS = [{
+            title: 'Name',
+            dataIndex: 'name',
+            key: 'name',
+        },
+            {
+                title: 'Email',
+                dataIndex: 'email',
+                key: 'email'
             },
             {
                 title: 'Selling',
@@ -1327,11 +1338,11 @@ function Statistics() {
         return (
             <Card title={'Agents'}>
                 &nbsp;Past year, by tickets
-                <Table dataSource={agentStats.year_tickets} columns={agentCols} size="small"/>
+                <Table dataSource={agentStats.year_tickets} columns={agentColsT} size="small"/>
                 &nbsp;Past month, by tickets
-                <Table dataSource={agentStats.month_tickets} columns={agentCols} size="small"/>
+                <Table dataSource={agentStats.month_tickets} columns={agentColsT} size="small"/>
                 &nbsp;Past year, by commission
-                <Table dataSource={agentStats.year_commission} columns={agentCols} size="small"/>
+                <Table dataSource={agentStats.year_commission} columns={agentColsS} size="small"/>
             </Card>
         )
     }
