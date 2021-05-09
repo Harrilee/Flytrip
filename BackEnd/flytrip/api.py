@@ -312,6 +312,10 @@ def get_passenger_info():
         with db.cursor() as cursor:
             cursor.execute("SELECT * FROM customer WHERE email = %s;", (email,))
             data = cursor.fetchone()
+            data['password'] = ''
+            data['date_of_birth'] = datetime.datetime.strftime(data['date_of_birth'], '%Y-%m-%d')
+            data['passport_expiration'] = datetime.datetime.strftime(data['passport_expiration'], '%Y-%m-%d')
+            print(data)
         return jsonify({'status': 'success',
                         'msg': '',
                         'data': data})
