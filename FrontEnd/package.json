@@ -2,7 +2,7 @@
   "name": "flytrip",
   "version": "0.1.0",
   "private": true,
-  "homepage":"./",
+  "homepage": "./",
   "dependencies": {
     "@babel/core": "7.12.3",
     "@pmmmwh/react-refresh-webpack-plugin": "0.4.3",
@@ -22,6 +22,7 @@
     "camelcase": "^6.1.0",
     "case-sensitive-paths-webpack-plugin": "2.3.0",
     "css-loader": "4.3.0",
+    "d3": "^6.7.0",
     "dotenv": "8.2.0",
     "dotenv-expand": "5.1.0",
     "eslint": "^7.11.0",

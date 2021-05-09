@@ -559,18 +559,14 @@ function MyOrders() {
         <Content style={{padding: '50px 50px', minHeight: '90vh'}}>
             <div style={{margin: '0 10px 10px'}}>
                 <DatePicker.RangePicker value={filteredData.range} onChange={(range) => {
+
+                    let endDate = moment(range[1].format('YYYY-MM-DD'),'YYYY-MM-DD')
+                    endDate.add(1,'d')
                     setFilteredData({
-                        orderData: filteredData.orderData,
-                        data: ()=>{
-                            try{
-                                return(filteredData.orderData.filter(d => {
-                                    return moment(d.date).isBetween(range[0].format("YYYY-MM-DD"), range[1].format("YYYY-MM-DD"))
-                                }))
-                            }
-                            catch (e){
-                                return []
-                            }
-                        },
+                        orderData:filteredData.orderData,
+                        data: filteredData.orderData.filter?filteredData.orderData.filter(d => {
+                            return moment(d.purchase_time,'YYYY-MM-DD').isBetween(range[0].format("YYYY-MM-DD"),endDate.format("YYYY-MM-DD"))
+                        }):[],
                         loaded: true,
                         range: range
                     })

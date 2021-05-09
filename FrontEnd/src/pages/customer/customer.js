@@ -11,6 +11,9 @@ import {
     UserOutlined, LogoutOutlined, SearchOutlined, ShoppingCartOutlined,
     ScheduleOutlined
 } from '@ant-design/icons';
+import Highcharts from 'highcharts';
+import HighchartsReact from 'highcharts-react-official';
+import * as d3 from 'd3'
 
 const {Header, Content, Footer} = Layout;
 
@@ -138,7 +141,7 @@ function Tickets() {
                                   url += '&' + key + '=' + form[key]
                               })
                               console.log(url)
-                              fetch(url,{credentials: 'include',})
+                              fetch(url, {credentials: 'include',})
                                   .then((resp) => resp.json())
                                   .then(data => {
                                       setDataSource(data.dataSource)
@@ -284,7 +287,7 @@ function UpcomingFlights() {
                                   url += '&' + key + '=' + form[key]
                               })
                               console.log(url)
-                              fetch(url,{credentials: 'include',})
+                              fetch(url, {credentials: 'include',})
                                   .then((resp) => resp.json())
                                   .then(data => {
                                       setDataSource(data.dataSource)
@@ -412,7 +415,7 @@ function MyOrders() {
     const [filteredData, setFilteredData] = React.useState({
         data: [],
         loaded: false,
-        range: [moment().subtract(366/2,'days'), moment()],
+        range: [moment().subtract(366 / 2, 'days'), moment()],
         orderData: []
     })
     if (!filteredData.loaded) {
@@ -434,7 +437,7 @@ function MyOrders() {
                         return moment(d.date).isBetween(filteredData.range[0].format("YYYY-MM-DD"), filteredData.range[1].format("YYYY-MM-DD"))
                     }),
                     loaded: true,
-                    range: [moment().subtract(366/2,'days'), moment()],
+                    range: [moment().subtract(366 / 2, 'days'), moment()],
                 })
             } else if (result.status === 'failed') {
                 alert("logout failed.\n" + result.msg)
@@ -490,7 +493,7 @@ function MyOrders() {
                                 </Col>
                                 <Col span={3}>
                                     <div className={'price'}>
-                                        {d.price+"￥"}
+                                        {d.price + "￥"}
                                     </div>
                                 </Col>
                                 <Col span={4}>
@@ -513,15 +516,85 @@ function MyOrders() {
         )
     }
 
+    function SellingGraph(props) {
+        const {orderData, dateRange} = props
+        let monthsBuckets = d3.timeMonth.every(1).range(dateRange[0].toDate(), dateRange[1].toDate())
+        let statisticBuckets = {}
+        monthsBuckets.forEach(d => {
+            statisticBuckets[moment(d).format('YYYY-MM')] = 0
+        })
+        console.log(statisticBuckets)
+
+        orderData.forEach(d => {
+            statisticBuckets[moment(
+                d3.timeMonth.floor(
+                    moment(d.purchase_time, 'YYYY-MM-DD').toDate()
+                )
+            ).format('YYYY-MM')] += 1
+        })
+        let monthLabels = Object.keys(statisticBuckets)
+        let yValues = Object.values(statisticBuckets)
+        console.log('b', statisticBuckets)
+        const chartOptions = {
+            chart: {
+                type: 'column',
+                zoomType: 'x',
+                panning: true,
+                panKey: 'shift'
+            },
+            xAxis: {
+                categories: monthLabels
+            },
+            yAxis: {
+                title: {text: ''}
+            },
+
+            boost: {
+                useGPUTranslations: true
+            },
+
+            title: {
+                text: ''
+            },
+
+            subtitle: {
+                text: ''
+            },
+
+            tooltip: {
+                valueDecimals: 2
+            },
+
+            series: [{
+                name: '',
+                data: yValues
+            }],
+            credits: {
+                enabled: false
+            },
+            legend: {
+                enabled: false
+            }
+
+        }
+        return (
+            <Card title={'My Spendings'}>
+                <HighchartsReact highcharts={Highcharts} options={chartOptions}/>
+            </Card>
+        )
+    }
+
     return (
         <Content style={{padding: '50px 50px', minHeight: '90vh'}}>
             <div style={{margin: '0 10px 10px'}}>
                 <DatePicker.RangePicker value={filteredData.range} onChange={(range) => {
+                    let endDate = moment(range[1].format('YYYY-MM-DD'), 'YYYY-MM-DD')
+                    endDate.add(1, 'd')
                     setFilteredData({
-                        orderData:filteredData.orderData,
-                        data: filteredData.orderData.filter(d => {
-                            return moment(d.date).isBetween(range[0].format("YYYY-MM-DD"), range[1].format("YYYY-MM-DD"))
-                        }),
+                        orderData: filteredData.orderData,
+                        data: filteredData.orderData.filter ? filteredData.orderData.filter(d => {
+                            return moment(d.purchase_time, 'YYYY-MM-DD').isBetween(range[0].format("YYYY-MM-DD"), endDate.format("YYYY-MM-DD"))
+                        }) : [],
                         loaded: true,
                         range: range
                     })
@@ -533,7 +606,9 @@ function MyOrders() {
                                 title="Total spending"
                                 precision={2}
                                 suffix="￥"
-                                value={filteredData.data.map(d=>d.price).reduce((accu, cur)=>{return accu+cur},0)}
+                                value={filteredData.data.map(d => d.price).reduce((accu, cur) => {
+                                    return accu + cur
+                                }, 0)}
                             />
                         </Card>
                     </Col>
@@ -551,7 +626,7 @@ function MyOrders() {
                         <Card bordered={false}>
                             <Statistic
                                 title="Order in progress"
-                                value={filteredData.data.filter(d=>d.status!=='finished').length}
+                                value={filteredData.data.filter(d => d.status !== 'finished').length}
                                 precision={0}
                                 suffix=""
                             />
@@ -561,7 +636,7 @@ function MyOrders() {
                         <Card bordered={false}>
                             <Statistic
                                 title="Finished order"
-                                value={filteredData.data.filter(d=>d.status=='finished').length}
+                                value={filteredData.data.filter(d => d.status == 'finished').length}
                                 precision={0}
                                 suffix=""
                             />
@@ -571,7 +646,10 @@ function MyOrders() {
             </div>
             <div className="site-layout-content">
                 <div style={{padding: '20px'}}>
+                    {filteredData.data.length === 0 ? <React.Fragment/> :
+                        <SellingGraph orderData={filteredData.data} dateRange={filteredData.range}/>}
                     {filteredData.data.length === 0 ? <Empty style={{margin: '100px 0'}}/> : <OrderStatus/>}
+
                     {filteredData.data.length === 0 ? <React.Fragment/> : <OrderList orderData={filteredData.data}/>}
 
                 </div>
