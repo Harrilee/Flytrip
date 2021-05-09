@@ -141,6 +141,7 @@ def order():  # agent和customer共用接口
                     item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
                     item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
                     item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
+                    item['purchase_time'] = datetime.datetime.strftime(item['purchase_time'], '%Y-%m-%d %H:%M')
             return jsonify({'status': 'success', 'data': data})
 
         elif session['user_type'] == 'agent':
@@ -183,6 +184,7 @@ def order():  # agent和customer共用接口
                     item['arrival_time'] = datetime.datetime.strftime(item['arrival_time'], '%H:%M')
                     item['departure_time'] = datetime.datetime.strftime(item['departure_time'], '%H:%M')
                     item['date'] = datetime.datetime.strftime(item['date'], '%Y-%m-%d')
+                    item['purchase_time'] = datetime.datetime.strftime(item['purchase_time'], '%Y-%m-%d %H:%M')
                 print(data)
             return jsonify({'status': 'success', 'data': data})
 
