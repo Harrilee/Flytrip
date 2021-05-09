@@ -88,11 +88,11 @@ def purchase():
                         ''', (next_index, req['email'], None, datetime.date.today().isoformat())
                            )
             db.commit()
-    except cursor.Error as e:
+    except pymysql.Error as e:
         print(e)
-        return jsonify({'status': 'failed', 'msg': str(e)})
+        return jsonify({'status': 'failed', 'msg': e.args[1]})
     except Exception as e:
-        return jsonify({'status': 'failed', 'msg': 'Inernal error.' + str(e)})
+        return jsonify({'status': 'failed', 'msg': 'Internal error.' + str(e)})
     return jsonify({'status': 'success'})
 
 
