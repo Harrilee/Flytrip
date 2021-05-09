@@ -617,6 +617,8 @@ def get_top_customer_commission():
 SELECT name, email, SUM(price) commission
 FROM agent_ticket
 GROUP BY email
+ORDER BY commission DESC
+LIMIT 5;
 ''', (agent_id,))
             data = cursor.fetchall()
             for i in data:
