@@ -30,7 +30,7 @@ const options = [
     { label: 'Customer', value: 'customer' },
     { label: 'Agent', value: 'agent' },
     { label: 'Staff', value: 'staff' },
-    { label: 'Admin', value: 'admin'}
+
 ];
 const register = (values)=>{
     if (values.phone_prefix!==undefined) values.phone = values.phone_prefix+' '+values.phone_number
