@@ -522,7 +522,7 @@ LIMIT 5;
 @agent_login_required
 def get_top_customer_ticket():
     try:
-        agent_id = session['agent_id']
+        agent_id = session['agent_ID']
         db = get_db()
         with db.cursor() as cursor:
             cursor.execute('''

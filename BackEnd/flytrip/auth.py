@@ -392,7 +392,7 @@ def get_session_info():
                             'username': ''})
     else:
         print('No session found')
-        session['username'] = '1890'
+        session['username'] = 'user'
         print('fallback to guest user')
         print(session)
         return jsonify({'status': 'failed',
