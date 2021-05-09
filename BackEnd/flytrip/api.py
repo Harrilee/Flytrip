@@ -518,8 +518,15 @@ GROUP BY DATE_FORMAT(date, '%b')
 @staff_login_required
 def get_top_customer():
     try:
+        print('8' * 100)
+        print(session)
         db = get_db()
+        username = session['username']
         with db.cursor() as cursor:
+            cursor.execute('''
+            SELECT airline_name FROM airline_staff WHERE username = %s
+            ''', (username,))
+            airline = cursor.fetchone()['airline_name']
             cursor.execute('''
 WITH SUM_CATEGORY AS (
     WITH TEMP_SUM AS (
@@ -534,6 +541,7 @@ WITH SUM_CATEGORY AS (
                  JOIN flight USING (airline_name, flight_num),
              customer
         WHERE customer.email = purchases.customer_email
+        and airline_name = %s
         GROUP BY email, class
     )
     SELECT name, email, class, BC AS price
@@ -553,7 +561,7 @@ FROM SUM_CATEGORY
 GROUP BY email, name
 ORDER BY spending DESC
 LIMIT 5;
-''')
+''', (airline, ))
             data = cursor.fetchall()
             for each in data:
                 each['spending'] = int(each['spending'])
