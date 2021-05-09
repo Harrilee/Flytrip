@@ -431,8 +431,8 @@ function MyOrders() {
         range: [moment().subtract(30, 'days'), moment()],
         orderData: []
     })
-    const [ticketBuyer, setTicketBuyer] = React.useState([])
-    const [commission, setCommission] = React.useState([])
+    const [ticketBuyer, setTicketBuyer] = React.useState(null)
+    const [commission, setCommission] = React.useState(null)
     if (!filteredData.loaded) {
         fetch('http://localhost:5000/api/order', {
             mode: 'cors',
@@ -461,14 +461,14 @@ function MyOrders() {
             }
         });
     }
-    if (ticketBuyer.length === 0) {
+    if (ticketBuyer === null) {
         fetch('http://localhost:5000/api/agent_get_top_customer_by_ticket', {credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
                 setTicketBuyer(data.data);
             });
     }
-    if (commission.length === 0) {
+    if (commission === null) {
         fetch('http://localhost:5000/api/agent_get_top_customer_by_commission', {credentials: 'include',})
             .then((resp) => resp.json())
             .then(data => {
@@ -616,7 +616,7 @@ function MyOrders() {
                 <Row gutter={16}>
                     <Col span={12}>
                         <Card bordered={false} title={'Top 5 half-year ticket buyers'}>
-                            <HighchartsReact highcharts={Highcharts} options={
+                            {ticketBuyer===null?<Empty />:<HighchartsReact highcharts={Highcharts} options={
                                 {
                                     chart: {
                                         type: 'column'
@@ -655,12 +655,12 @@ function MyOrders() {
                                         enabled: false
                                     }
                                 }
-                            }/>
+                            }/>}
                         </Card>
                     </Col>
                     <Col span={12}>
                         <Card bordered={false} title={'Top 5 half-year commission contributors'}>
-                            <HighchartsReact highcharts={Highcharts} options={
+                            {commission===null?<Empty />:<HighchartsReact highcharts={Highcharts} options={
                                 {
                                     chart: {
                                         type: 'column'
@@ -699,7 +699,7 @@ function MyOrders() {
                                         enabled: false
                                     }
                                 }
-                            }/>
+                            }/>}
                         </Card>
                     </Col>
                 </Row>
