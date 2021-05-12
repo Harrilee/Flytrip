@@ -6,7 +6,7 @@ Zihang Xia [zx961@nyu.edu](mailto:zx961@nyu.edu)
 
 ## Run Project
 ### Initialize database
-For macos
+For Linux/MacOS
 ```bash
 cd BackEnd
 export FLASK_APP=flytrip
@@ -22,6 +22,22 @@ flask init-db
 ```bat
 cd FrontEnd
 npm start
+```
+
+### Back End Development Server
+for Linux/MacOS
+```bash
+cd BackEnd
+export FLASK_APP=flytrip
+export FLASK_ENV=development
+flask run
+```
+for Windows
+```bat
+cd BackEnd
+set FLASK_APP=flytrip
+set FLASK_ENV=development
+flask run
 ```
 
 ## Project Structure
