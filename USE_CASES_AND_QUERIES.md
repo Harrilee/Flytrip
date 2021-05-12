@@ -94,7 +94,8 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
 3. Login: 3 types of user login (Customer, Booking agent, Airline Staff). User enters their username (email address will
    be used as username), x, and password, y, via forms on login page. This data is sent as POST parameters to the
    login-authentication component, which checks whether there is a tuple in the Person table with username=x and the
-   password = check_password_hash(y). This is the builtin function provided by werkzeug.security that implements salting and hashing.
+   password = check_password_hash(y). This is the builtin function provided by werkzeug.security that implements salting
+   and hashing.
 
     1. If so, login is successful. A session is initiated with the member’s username stored as a session variable.
        Optionally, you can store other session variables. Control is redirected to a component that displays the user’s
@@ -150,25 +151,267 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
    30 days. He/she will be able to see all the current/future/past flights operated by the airline he/she works for
    based range of dates, source/destination airports/city etc. He/she will be able to see all the customers of a
    particular flight.
+   ```sql
+   -- Get the upcoming flight information
+   SELECT flight_num,
+      arrival_airport,
+      departure_airport,
+      arrival_time,
+      departure_time,
+      status,
+      airline_name airline,
+      DATE_FORMAT(date, '%%Y-%%m-%%d') date
+
+   FROM flight WHERE airline_name = %s;
+   
+   
+   -- See all customers of a particular fligh
+   SELECT * FROM customer JOIN purchases p ON customer.email = p.customer_email 
+    JOIN ticket t ON p.ticket_id = t.ticket_id
+    JOIN flight f ON t.airline_name = f.airline_name AND t.flight_num = f.flight_num
+   WHERE f.flight_num = %s AND f.airline_name = %s AND f.date = %s;
+   
+   -- Get one particular passenger's info
+   SELECT * FROM customer WHERE email = %s;
+   ```
 2. Create new flights: He or she creates a new flight, providing all the needed data, via forms. The application should
    prevent unauthorized users from doing this action. Defaults will be showing all the upcoming flights operated by the
    airline he/she works for the next 30 days.
+   ```sql
+   -- Get the airline this staff belongs to
+   SELECT * FROM airline_staff WHERE username = %s;
+   
+   -- Create new flights
+   INSERT INTO flight(airline_name, flight_num, departure_airport, departure_time, arrival_airport
+    , arrival_time, ECprice, BCprice, FCprice, status, airplane_id, date) 
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+   ```
+
 3. Change Status of flights: He or she changes a flight status (from upcoming to in progress, in progress to delayed
    etc) via forms.
+   ```sql
+   UPDATE flight SET status = %s WHERE flight_num = %s AND airline_name = %s AND date = %s;
+   ```
 4. Add airplane in the system: He or she adds a new airplane, providing all the needed data, via forms. The application
    should prevent unauthorized users from doing this action. In the confirmation page, she/he will be able to see all
    the airplanes owned by the airline he/she works for.
+   ```sql
+   -- Get the airline this staff belongs to
+   SELECT * FROM airline_staff WHERE username = %s;
+   
+   -- Add new airplane
+   INSERT INTO airplane(airline_name, airplane_id, ECseats, FCseats, BCseats) 
+   VALUES (%s, %s, %s, %s, %s);
+   ```
 5. Add new airport in the system: He or she adds a new airport, providing all the needed data, via forms. The
    application should prevent unauthorized users from doing this action.
+   ```sql
+   INSERT INTO airport(airport_name, airport_city) VALUES (%s, %s);
+   ```
 6. View all the booking agents: Top 5 booking agents based on number of tickets sales for the past month and past year.
    Top 5 booking agents based on the amount of commission received for the last year.
+   ```sql
+   -- By selling
+   WITH agent_ticket AS (
+   SELECT booking_agent_id, email,
+           CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'EC' THEN ECprice
+               WHEN class = 'FC' THEN FCprice
+               END price
+   FROM ticket
+             NATURAL JOIN purchases
+             NATURAL JOIN flight
+             NATURAL JOIN booking_agent
+   WHERE booking_agent_id IS NOT NULL
+     AND date > DATE_SUB(NOW(), INTERVAL 1 YEAR))
+   SELECT CONCAT('Agent ', booking_agent_id) name, SUM(price) selling, email
+   FROM agent_ticket
+   GROUP BY email
+   ORDER BY selling DESC
+   LIMIT 5;
+   
+   -- By ticket, in a year
+   SELECT CONCAT('Agent ',booking_agent_id) name, COUNT(*) tickets, email
+   FROM purchases
+   NATURAL JOIN booking_agent
+   WHERE booking_agent_id IS NOT NULL
+     AND purchase_date > DATE_SUB(NOW(), INTERVAL 1 YEAR)
+   GROUP BY email
+   ORDER BY tickets DESC
+   LIMIT 5;
+   
+   -- By ticket, in a month
+   SELECT CONCAT('Agent ',booking_agent_id) name, COUNT(*) tickets, email
+   FROM purchases
+   NATURAL JOIN booking_agent
+   WHERE booking_agent_id IS NOT NULL
+     AND purchase_date > DATE_SUB(NOW(), INTERVAL 1 MONTH)
+   GROUP BY email
+   ORDER BY tickets DESC
+   LIMIT 5;
+   ```
 7. View frequent customers: Airline Staff will also be able to see the most frequent customer within the last year. In
    addition, Airline Staff will be able to see a list of all flights a particular Customer has taken only on that
    particular airline.
+   ```sql
+   -- Get the airline this staff belongs to
+   SELECT * FROM airline_staff WHERE username = %s;
+   
+   -- Get top 5 customers
+   WITH SUM_CATEGORY AS (
+    WITH TEMP_SUM AS (
+        SELECT CONCAT(firstname, ' ', lastname) AS name,
+               email,
+               class,
+               SUM(BCprice)                     AS BC,
+               SUM(FCprice)                     AS EC,
+               SUM(ECprice)                     AS FC
+        FROM ticket
+                 JOIN purchases USING (ticket_id)
+                 JOIN flight USING (airline_name, flight_num),
+             customer
+        WHERE customer.email = purchases.customer_email
+        and airline_name = %s
+        GROUP BY email, class
+    )
+    SELECT name, email, class, BC AS price
+    FROM TEMP_SUM
+    WHERE class = 'BC'
+    UNION
+    SELECT name, email, class, EC AS price
+    FROM TEMP_SUM
+    WHERE class = 'EC'
+    UNION
+    SELECT name, email, class, FC AS price
+    FROM TEMP_SUM
+    WHERE class = 'FC'
+   )
+   SELECT name, email, SUM(price) AS spending
+   FROM SUM_CATEGORY
+   GROUP BY email, name
+   ORDER BY spending DESC
+   LIMIT 5;
+   
+   -- View customer orders
+   SELECT flight.date,
+       airline_name                     airline,
+       flight_num,
+       departure_time,
+       departure_airport,
+       arrival_time,
+       arrival_airport,
+       CASE
+           WHEN class = 'BC' THEN BCprice
+           WHEN class = 'EC' THEN ECprice
+           WHEN class = 'FC' THEN FCprice
+           END                          price,
+       purchase_date                    purchase_time,
+       status,
+       customer_email,
+       CONCAT(firstname, ' ', lastname) customer_name
+   FROM purchases
+            JOIN ticket USING (ticket_id)
+            JOIN flight USING (flight_num, airline_name)
+            JOIN customer ON purchases.customer_email = customer.email
+   WHERE customer_email = %s;
+   ```
 8. View reports: Total amounts of ticket sold based on range of dates/last year/last month etc. Month wise tickets sold
    in a bar chart.
+   ```sql
+   -- Get selling by month
+   SELECT DATE_FORMAT(purchase_date, '%b') month,
+       DATE_FORMAT(purchase_date, '%Y') year,
+       SUM(CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               WHEN class = 'EC' THEN ECprice
+               ELSE ECprice
+           END)
+                                        price
+   FROM purchases
+            JOIN ticket USING (ticket_id)
+            JOIN flight USING (airline_name, flight_num)
+            JOIN customer c ON purchases.customer_email = c.email
+   WHERE purchase_date < %s
+     AND purchase_date > %s
+     AND customer_email = %s
+   GROUP BY DATE_FORMAT(purchase_date, '%b'),
+            DATE_FORMAT(purchase_date, '%Y');
+   
+   -- Get total selling
+   WITH temp_sum AS (
+    SELECT purchase_date date,
+           CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               WHEN class = 'EC' THEN ECprice
+               ELSE ECprice
+               END
+               price
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (flight_num, date)
+    WHERE purchases.purchase_date > DATE_SUB(NOW(), INTERVAL 1 YEAR)
+    )
+   SELECT DATE_FORMAT(date, '%b') month, SUM(price) selling
+   FROM temp_sum
+   GROUP BY DATE_FORMAT(date, '%b')
+   ```
 9. Comparison of Revenue earned: Draw a pie chart for showing total amount of revenue earned from direct sales (when
    customer bought tickets without using a booking agent) and total amount of revenue earned from indirect sales (when
    customer bought tickets using booking agents) in the last month and last year.
+   ```sql
+   -- In a year
+    WITH total_sum AS (
+    SELECT booking_agent_id,
+           CASE
+               WHEN ticket.class = 'EC' THEN ECprice
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               END price
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (airline_name, flight_num)
+    WHERE purchase_date > DATE_SUB(NOW(), INTERVAL 1 YEAR)
+   
+   -- In a month
+    WITH total_sum AS (
+    SELECT booking_agent_id,
+           CASE
+               WHEN ticket.class = 'EC' THEN ECprice
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               END price
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (airline_name, flight_num)
+    WHERE purchase_date > DATE_SUB(NOW(), INTERVAL 1 MONTH)
+   )
+   SELECT IFNULL(SUM(IF(booking_agent_id IS NOT NULL, 0, price)),0) direct_year,
+          IFNULL(SUM(IF(booking_agent_id IS NULL, 0, price)),0)     indirect_year
+   FROM total_sum;
+   )
+   SELECT IFNULL(SUM(IF(booking_agent_id IS NOT NULL, 0, price)),0) direct_year,
+          IFNULL(SUM(IF(booking_agent_id IS NULL, 0, price)),0)     indirect_year
+   FROM total_sum;
+   ```
 10. View Top destinations: Find the top 3 most popular destinations for last 3 months and last year.
+    ```sql
+    -- In a year
+    SELECT COUNT(*) COUNT,a.airport_city 
+    FROM (flight JOIN airport a ON flight.arrival_airport = a.airport_name) 
+    WHERE departure_time > DATE_SUB(NOW(), INTERVAL 1 YEAR) 
+    GROUP BY a.airport_city 
+    ORDER BY COUNT DESC 
+    LIMIT 3; 
+    -- In a month
+    SELECT COUNT(*) COUNT,a.airport_city 
+    FROM (flight JOIN airport a ON flight.arrival_airport = a.airport_name) 
+    WHERE departure_time > DATE_SUB(NOW(), INTERVAL 1 MONTH) 
+    GROUP BY a.airport_city 
+    ORDER BY COUNT DESC 
+    LIMIT 3; 
+    ```
 11. Logout: The session is destroyed and a “goodbye” page or the login page is displayed.
+
