@@ -9,10 +9,10 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
 1. View Public Info: All users, whether logged in or not, can
 
    a. Search for upcoming flights based on source city/airport name, destination city/airport name, date.
-
-   b. Will be able to see the flights status based on flight number, arrival/departure date.
    ```mysql
+   -- The search api is the same for all roles
    -- The following query fetches the basic info about the flights
+   -- The departure and arrival field can be city or airport name
    SELECT airplane_id,
           airline_name,
           date,
@@ -36,6 +36,7 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
      AND (UPPER(%s) = UPPER(a_airport.airport_name) OR UPPER(%s) = UPPER(a_airport.airport_city));
    
    -- This query computes whether the specific flights are still available
+   -- The result from both queries are returned to the frontend for the search function
    WITH sold_ticket_info AS (
        SELECT COUNT(class) AS sold_tickets, class
        FROM ticket
@@ -65,6 +66,21 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
    SELECT class, sold_tickets < available AS soldable
    FROM available_ticket_info
             NATURAL JOIN sold_ticket_info;
+   ```
+   b. Will be able to see the flights status based on flight number, arrival/departure date.
+   ```mysql
+   -- Get flights based on flight_num and airline_name
+   SELECT airline_name airline,
+          flight_num,
+          departure_time,
+          arrival_time,
+          departure_airport,
+          arrival_airport,
+          date,
+          status
+   FROM flight
+   WHERE flight_num = %s
+     AND airline_name = %s
    ```
 2. Register: 3 types of user registrations (Customer, Booking agent, Airline Staff) option via forms.
     1. Customer
@@ -116,35 +132,341 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
 1. View My flights: Provide various ways for the user to see flights information which he/she purchased. The default
    should be showing for the upcoming flights. Optionally you may include a way for the user to specify a range of
    dates, specify destination and/or source airport name or city name etc.
+   ```mysql
+   SELECT flight.date,
+           airline_name                     airline,
+           flight_num,
+           departure_time,
+           departure_airport,
+           arrival_time,
+           arrival_airport,
+           CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'EC' THEN ECprice
+               WHEN class = 'FC' THEN FCprice
+               END                          price,
+           purchase_date                    purchase_time,
+           status,
+           customer_email,
+           CONCAT(firstname, ' ', lastname) customer_name
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (flight_num, airline_name)
+             JOIN customer ON purchases.customer_email = customer.email
+    WHERE customer_email = %s;
+   -- After getting all the results from a particular customer, we calculate the duration 
+   -- and arrival/departure cities using another function. 
+   
+   ```
 2. Purchase tickets: Customer chooses a flight and purchase ticket for this flight. You may find it easier to implement
    this along with a use case to search for flights.
+   ```mysql
+   -- Validate whether the remaining class still has seats
+   WITH avaiable_seat AS (
+                SELECT {classseats} AS avaliable
+                FROM flight
+                         JOIN airplane USING (airline_name, airplane_id)
+                WHERE airline_name = %s
+                  AND flight_num = %s
+                  AND date = %s
+            ),
+                 sold AS (
+                     SELECT COUNT(class) AS count
+                     FROM ticket
+                     WHERE airline_name = %s
+                       AND flight_num = %s
+                       AND date = %s
+                       AND class = %s
+                 )
+            SELECT sold.count<avaiable_seat.avaliable AS soldable
+            FROM sold, avaiable_seat
+   
+   -- Get ticket count
+   SELECT COUNT(ticket_id) AS count
+                        FROM purchases
+   
+   -- Insert into ticket table
+   INSERT INTO ticket(ticket_id, airline_name, flight_num, class, date)
+            VALUES (%s, %s, %s, %s, %s)
+   
+   -- Insert into purchases table
+   INSERT INTO purchases(ticket_id, customer_email, booking_agent_id, purchase_date)
+            VALUES(%s,%s,%s,%s)
+   ```
+
+
 3. Search for flights: Search for upcoming flights based on source city/airport name, destination city/airport name,
    date.
+   ```mysql
+   -- This part is the same as searching for non logged in users
+   SELECT airplane_id,
+                   airline_name,
+                   date,
+                   flight.departure_airport AS departure_airport,
+                   d_airport.airport_city   AS departure_city,
+                   a_airport.airport_city   AS arrival_city,
+                   a_airport.airport_name   AS arrival_airport,
+                   FCprice,
+                   BCprice,
+                   ECprice,
+                   departure_time,
+                   arrival_time,
+                   flight_num
+            FROM flight
+                     JOIN airport AS d_airport
+                     JOIN airport AS a_airport
+            WHERE flight.departure_airport = d_airport.airport_name
+              AND flight.arrival_airport = a_airport.airport_name
+              AND date = %s
+              AND (UPPER(%s) = UPPER(d_airport.airport_name) OR UPPER(%s) = UPPER(d_airport.airport_city))
+              AND (UPPER(%s)= UPPER(a_airport.airport_name) OR UPPER(%s) = UPPER(a_airport.airport_city))
+            AND status = 'upcoming'
+   ```
 4. Track My Spending: Default view will be total amount of money spent in the past year and a bar chart showing month
    wise money spent for last 6 months. He/she will also have option to specify a range of dates to view total amount of
    money spent within that range and a bar chart showing month wise money spent within that range.
+   ```mysql
+   -- The purchase information is retrieved using a CASE statement. 
+   -- This information is returned to frontend for diagramming and visualization as well as time selection
+   SELECT flight.date,
+           airline_name                     airline,
+           flight_num,
+           departure_time,
+           departure_airport,
+           arrival_time,
+           arrival_airport,
+           CASE
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'EC' THEN ECprice
+               WHEN class = 'FC' THEN FCprice
+               END                          price,
+           purchase_date                    purchase_time,
+           status,
+           customer_email,
+           CONCAT(firstname, ' ', lastname) customer_name
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (flight_num, airline_name)
+             JOIN customer ON purchases.customer_email = customer.email
+    WHERE customer_email = %s;
+   ```
 5. Logout: The session is destroyed and a “goodbye” page or the login page is displayed.
-
+   ```python
+   #  We simply clear the session of the specific user
+   session.clear()
+   ```
 ## Booking Agent
 
 1. View My flights: Provide various ways for the booking agents to see flights information for which he/she purchased on
    behalf of customers. The default should be showing for the upcoming flights. Optionally you may include a way for the
    user to specify a range of dates, specify destination and/or source airport name and/or city name etc to show all the
    flights for which he/she purchased tickets.
+   ```mysql
+   -- Retrieve all the booking information from purchases, ticket, flight, customer and booking_agent table
+   SELECT booking_agent_id,
+               flight.date,
+               airline_name                     airline,
+               flight_num,
+               departure_time,
+               departure_airport,
+               arrival_time,
+               arrival_airport,
+               CASE
+                   WHEN class = 'BC' THEN BCprice
+                   WHEN class = 'EC' THEN ECprice
+                   WHEN class = 'FC' THEN FCprice
+                   END                          price,
+               purchase_date                    purchase_time,
+               status,
+               customer_email,
+               CONCAT(firstname, ' ', lastname) customer_name
+        FROM purchases
+                 JOIN ticket USING (ticket_id)
+                 JOIN flight USING (flight_num, airline_name)
+                 JOIN customer ON purchases.customer_email = customer.email
+                 JOIN booking_agent USING (booking_agent_id)
+        WHERE booking_agent.email = %s;
+   ```
 2. Purchase tickets: Booking agent chooses a flight and purchases tickets for other customers giving customer
    information. You may find it easier to implement this along with a use case to search for flights.
+   ```mysql
+   -- Similar to customers purchasing tickets, a check is done to ensure there are remaining seats
+   WITH avaiable_seat as (
+                SELECT {classseats} as avaliable
+                FROM flight
+                         JOIN airplane USING (airline_name, airplane_id)
+                WHERE airline_name = %s
+                  AND flight_num = %s
+                  AND date = %s
+            ),
+                 sold as (
+                     SELECT count(class) as count
+                     FROM ticket
+                     WHERE airline_name = %s
+                       AND flight_num = %s
+                       AND date = %s
+                       AND class = %s
+                 )
+            SELECT sold.count<avaiable_seat.avaliable as soldable
+            FROM sold, avaiable_seat
+   
+   -- Then we get the current ticket count and increment
+   SELECT COUNT(ticket_id) AS count
+            FROM purchases
+   
+   -- Insert into the ticket table
+   INSERT INTO ticket(ticket_id, airline_name, flight_num, class, date)
+            VALUES (%s, %s, %s, %s, %s)
+   
+   -- Insert into the purchase table, this time we include the booking agent ID
+   INSERT INTO purchases(ticket_id, customer_email, booking_agent_id, purchase_date)
+            VALUES(%s,%s,%s,%s)
+   ```
 3. Search for flights: Search for upcoming flights based on source city/airport name, destination city/airport name,
    date.
+   ```mysql
+   -- This is the same as the searching function for customers and non logged in users
+   -- Search by date and departure and arrival airport/city
+   SELECT airplane_id,
+          airline_name,
+          date,
+          flight.departure_airport AS departure_airport,
+          d_airport.airport_city   AS departure_city,
+          a_airport.airport_city   AS arrival_city,
+          a_airport.airport_name   AS arrival_airport,
+          FCprice,
+          BCprice,
+          ECprice,
+          departure_time,
+          arrival_time,
+          flight_num
+   FROM flight
+            JOIN airport AS d_airport
+            JOIN airport AS a_airport
+   WHERE flight.departure_airport = d_airport.airport_name
+     AND flight.arrival_airport = a_airport.airport_name
+     AND date = %s
+     AND (UPPER(%s) = UPPER(d_airport.airport_name) OR UPPER(%s) = UPPER(d_airport.airport_city))
+     AND (UPPER(%s)= UPPER(a_airport.airport_name) OR UPPER(%s) = UPPER(a_airport.airport_city))
+   AND status = 'upcoming'
+   
+   WITH sold_ticket_info AS (
+         SELECT COUNT(class) AS sold_tickets, class
+         FROM ticket
+         WHERE airline_name = %s
+           AND flight_num = %s
+           AND date = %s
+         GROUP BY class
+     ),
+          available_ticket_info_temp AS (
+              SELECT ECseats, FCseats, BCseats
+              FROM airplane
+                       JOIN flight USING (airplane_id, airline_name)
+              WHERE airline_name = %s
+                AND flight_num = %s
+                AND date = %s
+                
+          ),
+          available_ticket_info AS (
+              SELECT 'EC' AS class, ECseats AS available
+              FROM available_ticket_info_temp
+              UNION
+              SELECT 'BC' AS class, BCseats AS available
+              FROM available_ticket_info_temp
+              UNION
+              SELECT 'FC' AS class, FCseats AS available
+              FROM available_ticket_info_temp
+          )
+     SELECT class, sold_tickets<available AS soldable
+     FROM available_ticket_info NATURAL JOIN sold_ticket_info
+   
+   -- Search by flight number and airline
+   SELECT airline_name airline,
+          flight_num,
+          departure_time,
+          arrival_time,
+          departure_airport,
+          arrival_airport,
+          date,
+          status
+   FROM flight
+   WHERE flight_num = %s
+     AND airline_name = %s
+   ```
 4. View my commission: Default view will be total amount of commission received in the past 30 days and the average
    commission he/she received per ticket booked in the past 30 days and total number of tickets sold by him in the past
    30 days. He/she will also have option to specify a range of dates to view total amount of commission received and
    total numbers of tickets sold.
+   ```mysql
+   -- Get all the booking information for this particular booking agent
+   -- Calculate the duration of the flight as well as the departure and arrival airports in python
+   -- The total amount of commission is calcualted at frontend as well as the date restrictions
+   SELECT booking_agent_id,
+          flight.date,
+          airline_name                     airline,
+          flight_num,
+          departure_time,
+          departure_airport,
+          arrival_time,
+          arrival_airport,
+          CASE
+              WHEN class = 'BC' THEN BCprice
+              WHEN class = 'EC' THEN ECprice
+              WHEN class = 'FC' THEN FCprice
+              END                          price,
+          purchase_date                    purchase_time,
+          status,
+          customer_email,
+          CONCAT(firstname, ' ', lastname) customer_name
+   FROM purchases
+            JOIN ticket USING (ticket_id)
+            JOIN flight USING (flight_num, airline_name)
+            JOIN customer ON purchases.customer_email = customer.email
+            JOIN booking_agent USING (booking_agent_id)
+   WHERE booking_agent.email = %s;
+   ```
 5. View Top Customers: Top 5 customers based on number of tickets bought from the booking agent in the past 6 months and
    top 5 customers based on amount of commission received in the last year. Show a bar chart showing each of these 5
    customers in x-axis and number of tickets bought in y-axis. Show another bar chart showing each of these 5 customers
    in x-axis and amount commission received in y- axis.
+   ```mysql
+   -- Get the top 5 customers based on number of tickets
+   SELECT COUNT(*) ticket,  CONCAT(firstname, ' ', lastname) AS name, email
+   FROM ticket
+            JOIN purchases USING (ticket_id),
+        customer
+   WHERE customer.email = purchases.customer_email
+   AND booking_agent_id = %s
+   GROUP BY email
+   ORDER BY ticket DESC
+   LIMIT 5;
+   
+   -- Get the top 5 customers based on commission/money spent
+   WITH agent_ticket AS (
+    SELECT email,
+           CONCAT(firstname, ' ', lastname) name,
+           CASE
+               WHEN class = 'EC' THEN ECprice
+               WHEN class = 'BC' THEN BCprice
+               WHEN class = 'FC' THEN FCprice
+               END                          price
+    FROM purchases
+             JOIN ticket USING (ticket_id)
+             JOIN flight USING (flight_num, date, airline_name)
+             JOIN customer ON purchases.customer_email = customer.email
+    WHERE booking_agent_id = %s)
+   SELECT name, email, SUM(price) commission
+   FROM agent_ticket
+   GROUP BY email
+   ORDER BY commission DESC
+   LIMIT 5;
+   ```
+   
 6. Logout: The session is destroyed and a “goodbye” page or the login page is displayed.
-
+   ```python
+   # We simply clear the session of the agent
+   session.clear()
+   ```
 ## Airline Staff
 
 1. View My flights: Defaults will be showing all the upcoming flights operated by the airline he/she works for the next
@@ -414,4 +736,7 @@ Harry Lee [hl3794@nyu.edu](mailto:hl3794@nyu.edu), Zihang Xia [zx961@nyu.edu](ma
     LIMIT 3; 
     ```
 11. Logout: The session is destroyed and a “goodbye” page or the login page is displayed.
-
+   ```python
+   # We simply clear the session of the agent
+   session.clear()
+   ```
